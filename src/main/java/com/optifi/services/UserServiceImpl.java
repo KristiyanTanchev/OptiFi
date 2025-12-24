@@ -4,6 +4,7 @@ import com.optifi.exceptions.DuplicateEntityException;
 import com.optifi.models.User;
 import com.optifi.repositories.UserRepository;
 import com.optifi.models.Role;
+import com.optifi.services.commands.RegisterUserCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,15 +18,15 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-
     @Override
-    public User createUser(String username, String password, Role role) {
-        if (userRepository.existsByUsername(username)) {
-            throw new DuplicateEntityException("User", "username", username);
+    public User createUser(RegisterUserCommand cmd, Role role) {
+        if (userRepository.existsByUsername(cmd.username())) {
+            throw new DuplicateEntityException("User", "username", cmd.username());
         }
         User user = User.builder()
-                .username(username)
-                .password(passwordEncoder.encode(password))
+                .username(cmd.username())
+                .passwordHash(passwordEncoder.encode(cmd.password()))
+                .email(cmd.email())
                 .role(role)
                 .build();
 

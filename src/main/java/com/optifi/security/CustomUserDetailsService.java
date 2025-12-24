@@ -33,7 +33,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return new CustomUserDetails(
                 user.getUsername(),
-                user.getPassword(),
+                user.getPasswordHash(),
                 true, // enabled
                 true, // accountNonExpired
                 true, // credentialsNonExpired

@@ -4,6 +4,7 @@ import com.optifi.exceptions.DuplicateEntityException;
 import com.optifi.models.Role;
 import com.optifi.models.User;
 import com.optifi.repositories.UserRepository;
+import com.optifi.services.commands.RegisterUserCommand;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,7 +35,9 @@ public class UserServiceTests {
         when(userRepository.existsByUsername("john")).thenReturn(true);
 
         assertThrows(DuplicateEntityException.class,
-                () -> userService.createUser("john", "pass", Role.USER));
+                () -> userService.createUser(
+                        new RegisterUserCommand("john", "pass", ""), Role.USER)
+        );
 
         verify(userRepository).existsByUsername("john");
         verifyNoInteractions(passwordEncoder);
@@ -48,10 +51,13 @@ public class UserServiceTests {
 
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        User saved = userService.createUser("john", "pass", Role.ADMIN);
+        User saved = userService.createUser(
+                new RegisterUserCommand("john", "pass", ""),
+                Role.ADMIN
+        );
 
         assertEquals("john", saved.getUsername());
-        assertEquals("encoded-pass", saved.getPassword());
+        assertEquals("encoded-pass", saved.getPasswordHash());
         assertEquals(Role.ADMIN, saved.getRole());
 
         verify(passwordEncoder).encode("pass");

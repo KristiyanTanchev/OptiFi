@@ -33,11 +33,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public RegisterUserResult register(RegisterUserCommand cmd) {
-        User created = userService.createUser(
-                cmd.username(),
-                cmd.password(),
-                Role.USER
-        );
+        User created = userService.createUser(cmd, Role.USER);
 
         return RegisterUserResult.fromEntity(created);
     }

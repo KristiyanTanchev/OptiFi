@@ -47,6 +47,13 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.FORBIDDEN, e.getMessage(), request, null);
     }
 
+    @ExceptionHandler(SamePasswordException.class)
+    public ResponseEntity<ApiError> handleSamePassWordException(
+            SamePasswordException e,
+            HttpServletRequest request){
+        return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e,

@@ -7,7 +7,8 @@ import com.optifi.models.Role;
 import com.optifi.services.commands.ChangeEmailCommand;
 import com.optifi.services.commands.ChangePasswordCommand;
 import com.optifi.services.commands.RegisterUserCommand;
-import com.optifi.services.results.GetUserResult;
+import com.optifi.services.results.UserDetailsResult;
+import com.optifi.services.results.UserSummaryResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,18 +28,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<GetUserResult> getAllUsers() {
+    public List<UserSummaryResult> getAllUsers() {
         return userRepository.findAll(Sort.by(Sort.Direction.ASC, "username"))
                 .stream()
-                .map(GetUserResult::fromEntity)
+                .map(UserSummaryResult::fromEntity)
                 .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public GetUserResult getUser(Long userId) {
+    public UserDetailsResult getUser(Long userId) {
         return userRepository.findById(userId)
-                .map(GetUserResult::fromEntity)
+                .map(UserDetailsResult::fromEntity)
                 .orElseThrow(() -> new EntityNotFoundException("User", userId));
     }
 

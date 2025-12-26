@@ -7,7 +7,8 @@ import com.optifi.repositories.UserRepository;
 import com.optifi.services.commands.ChangeEmailCommand;
 import com.optifi.services.commands.ChangePasswordCommand;
 import com.optifi.services.commands.RegisterUserCommand;
-import com.optifi.services.results.GetUserResult;
+import com.optifi.services.results.UserDetailsResult;
+import com.optifi.services.results.UserSummaryResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,7 +73,7 @@ public class UserServiceTests {
     void getUser_Should_returnUser_When_userExists() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(user1));
 
-        GetUserResult result = userService.getUser(2L);
+        UserDetailsResult result = userService.getUser(2L);
 
         assertEquals(2L, result.id());
         assertEquals("alice", result.username());
@@ -93,7 +94,7 @@ public class UserServiceTests {
         when(userRepository.findAll(any(Sort.class)))
                 .thenReturn(List.of(admin, user1, user2));
 
-        List<GetUserResult> results = userService.getAllUsers();
+        List<UserSummaryResult> results = userService.getAllUsers();
 
         assertEquals(3, results.size());
         assertEquals("admin", results.get(0).username());

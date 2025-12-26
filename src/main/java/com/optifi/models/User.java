@@ -10,7 +10,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -50,8 +52,25 @@ public class User {
     @Builder.Default
     private Role role = Role.USER;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private UserPreference userPreference;
+    @OneToMany(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    @Builder.Default
+    @Setter(AccessLevel.NONE)
+    private Set<Account> accounts = new HashSet<>();
+
+    @Column(name = "base_currency", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Currency baseCurrency = Currency.USD;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "locale", nullable = false, length = 16)
+    @Builder.Default
+    private SupportedLocale locale = SupportedLocale.EN_US;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -66,5 +85,19 @@ public class User {
     void normalizeFields() {
         username = username.toLowerCase(Locale.ROOT);
         email = email.toLowerCase(Locale.ROOT);
+    }
+
+    public void addAccount(Account account) {
+        accounts.add(account);
+        account.setUser(this);
+    }
+
+    public void removeAccount(Account account) {
+        accounts.remove(account);
+        account.setUser(null);
+    }
+
+    public Set<Account> getAccounts() {
+        return new HashSet<>(accounts);
     }
 }

@@ -1,13 +1,11 @@
 package com.optifi.services;
 
 import com.optifi.models.Role;
-import com.optifi.models.User;
 import com.optifi.security.CustomUserDetails;
 import com.optifi.security.JwtTokenProvider;
 import com.optifi.services.commands.LoginCommand;
 import com.optifi.services.commands.RegisterUserCommand;
 import com.optifi.services.results.LoginResult;
-import com.optifi.services.results.RegisterUserResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,9 +30,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public RegisterUserResult register(RegisterUserCommand cmd) {
-        User created = userService.createUser(cmd, Role.USER);
+    public LoginResult register(RegisterUserCommand cmd) {
+        userService.createUser(cmd, Role.USER);
 
-        return RegisterUserResult.fromEntity(created);
+        return login(new LoginCommand(cmd.username(), cmd.password()));
     }
 }

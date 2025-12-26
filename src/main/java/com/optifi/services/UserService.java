@@ -5,14 +5,15 @@ import com.optifi.models.User;
 import com.optifi.services.commands.ChangeEmailCommand;
 import com.optifi.services.commands.ChangePasswordCommand;
 import com.optifi.services.commands.RegisterUserCommand;
-import com.optifi.services.results.GetUserResult;
+import com.optifi.services.results.UserDetailsResult;
+import com.optifi.services.results.UserSummaryResult;
 
 import java.util.List;
 
 public interface UserService {
-    GetUserResult getUser(Long userId);
+    UserDetailsResult getUser(Long userId);
 
-    List<GetUserResult> getAllUsers();
+    List<UserSummaryResult> getAllUsers();
 
     User createUser(RegisterUserCommand cmd, Role role);
 

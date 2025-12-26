@@ -1,20 +1,20 @@
 package com.optifi.services;
 
-import com.optifi.exceptions.DuplicateEntityException;
-import com.optifi.exceptions.EntityNotFoundException;
-import com.optifi.exceptions.SameEmailException;
-import com.optifi.exceptions.SamePasswordException;
+import com.optifi.exceptions.*;
 import com.optifi.models.User;
 import com.optifi.repositories.UserRepository;
 import com.optifi.models.Role;
 import com.optifi.services.commands.ChangeEmailCommand;
 import com.optifi.services.commands.ChangePasswordCommand;
 import com.optifi.services.commands.RegisterUserCommand;
+import com.optifi.services.results.GetUserResult;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -24,6 +24,23 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GetUserResult> getAllUsers() {
+        return userRepository.findAll(Sort.by(Sort.Direction.ASC, "username"))
+                .stream()
+                .map(GetUserResult::fromEntity)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GetUserResult getUser(Long userId) {
+        return userRepository.findById(userId)
+                .map(GetUserResult::fromEntity)
+                .orElseThrow(() -> new EntityNotFoundException("User", userId));
+    }
 
     @Override
     public User createUser(RegisterUserCommand cmd, Role role) {
@@ -45,12 +62,15 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(cmd.userId())
                 .orElseThrow(() -> new EntityNotFoundException("User", cmd.userId()));
 
-        if (passwordEncoder.matches(cmd.oldPassword(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(cmd.oldPassword(), user.getPasswordHash())) {
+            throw new AuthorizationException("Old password is incorrect");
+        }
+
+        if (passwordEncoder.matches(cmd.newPassword(), user.getPasswordHash())) {
             throw new SamePasswordException();
         }
 
         user.setPasswordHash(passwordEncoder.encode(cmd.newPassword()));
-        userRepository.save(user);
     }
 
     @Override
@@ -67,6 +87,34 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setEmail(cmd.email());
-        userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser(Long userId, Long currentUserId) {
+        validateCanDeleteUser(userId, currentUserId);
+        validateUserExists(userId);
+        userRepository.deleteById(userId);
+    }
+
+    private void validateUserExists(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new EntityNotFoundException("User", userId);
+        }
+    }
+
+    private void validateCanDeleteUser(Long userId, Long currentUserId) {
+        User requester = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User", currentUserId));
+
+        boolean isSelf = userId.equals(requester.getId());
+        boolean isAdmin = requester.getRole() == Role.ADMIN;
+
+        if (!isSelf && !isAdmin) {
+            throw new AuthorizationException("You can not allowed to delete this user");
+        }
+
+        if (isSelf && isAdmin && userRepository.countByRole(Role.ADMIN) == 1) {
+            throw new AuthorizationException("You can not delete last admin");
+        }
     }
 }

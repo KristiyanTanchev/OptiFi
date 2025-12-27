@@ -24,7 +24,7 @@ public class AuthRestController {
 
     @PostMapping("/register")
     public ResponseEntity<LoginResponseDto> register(@Valid @RequestBody RegisterRequestDto registerRequestDto) {
-        RegisterUserCommand cmd = registerRequestDto.toCommand();
+        RegisterUserCommand cmd = RegisterUserCommand.from(registerRequestDto);
         LoginResult result = authService.register(cmd);
         LoginResponseDto response = LoginResponseDto.fromResult(result);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -32,7 +32,7 @@ public class AuthRestController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
-        LoginCommand cmd = loginRequest.toCommand();
+        LoginCommand cmd = LoginCommand.from(loginRequest);
         LoginResult result = authService.login(cmd);
         LoginResponseDto response = LoginResponseDto.fromResult(result);
         return ResponseEntity.ok(response);

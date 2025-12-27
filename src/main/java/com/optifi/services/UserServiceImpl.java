@@ -4,9 +4,7 @@ import com.optifi.exceptions.*;
 import com.optifi.models.User;
 import com.optifi.repositories.UserRepository;
 import com.optifi.models.Role;
-import com.optifi.services.commands.ChangeEmailCommand;
-import com.optifi.services.commands.ChangePasswordCommand;
-import com.optifi.services.commands.RegisterUserCommand;
+import com.optifi.services.commands.*;
 import com.optifi.services.results.UserDetailsResult;
 import com.optifi.services.results.UserSummaryResult;
 import lombok.RequiredArgsConstructor;
@@ -97,6 +95,57 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(userId);
     }
 
+    @Override
+    public void setPreferences(SetUserPreferenceCommand cmd, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", userId));
+        user.setBaseCurrency(cmd.baseCurrency());
+        user.setLocale(cmd.locale());
+    }
+
+    @Override
+    public void changeUserRole(ChangeUserRoleCommand cmd) {
+        User currentUser = userRepository.findById(cmd.currentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User", cmd.currentUserId()));
+        User targetUser = userRepository.findById(cmd.targetId())
+                .orElseThrow(() -> new EntityNotFoundException("User", cmd.targetId()));
+
+        validateRoleChange(targetUser, currentUser, cmd.action());
+        switch (cmd.action()) {
+            case PROMOTE_TO_ADMIN:
+                targetUser.setRole(Role.ADMIN);
+                break;
+            case PROMOTE_TO_MODERATOR:
+                targetUser.setRole(Role.MODERATOR);
+                break;
+            case DEMOTE_TO_USER:
+                targetUser.setRole(Role.USER);
+                break;
+        }
+    }
+
+    @Override
+    public void banUser(BanUserCommand cmd) {
+        User currentUser = userRepository.findById(cmd.currentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User", cmd.currentUserId()));
+        User targetUser = userRepository.findById(cmd.targetId())
+                .orElseThrow(() -> new EntityNotFoundException("User", cmd.targetId()));
+
+        validateBanUser(currentUser, targetUser);
+        targetUser.setRole(Role.BLOCKED);
+    }
+
+    @Override
+    public void unbanUser(UnbanUserCommand cmd) {
+        User currentUser = userRepository.findById(cmd.currentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User", cmd.currentUserId()));
+        User targetUser = userRepository.findById(cmd.targetId())
+                .orElseThrow(() -> new EntityNotFoundException("User", cmd.targetId()));
+
+        validateUnbanUser(currentUser, targetUser);
+        targetUser.setRole(Role.USER);
+    }
+
     private void validateUserExists(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new EntityNotFoundException("User", userId);
@@ -116,6 +165,56 @@ public class UserServiceImpl implements UserService {
 
         if (isSelf && isAdmin && userRepository.countByRole(Role.ADMIN) == 1) {
             throw new AuthorizationException("You can not delete last admin");
+        }
+    }
+
+    private void validateRoleChange(User targetUser, User currentUser, RoleChangeAction action) {
+        if (!currentUser.isAdmin()) {
+            throw new AuthorizationException("Only admins can change user roles");
+        }
+        if (currentUser.equals(targetUser)) {
+            throw new AuthorizationException("Cannot change role of self");
+        }
+        if (targetUser.getRole() == Role.BLOCKED) {
+            throw new IllegalStateTransitionException("User is blocked");
+        }
+        if (action == RoleChangeAction.PROMOTE_TO_ADMIN && targetUser.getRole() == Role.ADMIN) {
+            throw new IllegalStateTransitionException("User is already admin");
+        }
+        if (action == RoleChangeAction.PROMOTE_TO_MODERATOR &&
+                (targetUser.getRole() == Role.MODERATOR || targetUser.getRole() == Role.ADMIN)) {
+            throw new IllegalStateTransitionException("User is already moderator or admin");
+        }
+        if (action == RoleChangeAction.DEMOTE_TO_USER && targetUser.getRole() != Role.ADMIN
+                && targetUser.getRole() != Role.MODERATOR) {
+            throw new IllegalStateTransitionException("User is not admin or moderator");
+        }
+    }
+
+    private void validateBanUser(User currentUser, User targetUser) {
+        if (currentUser.equals(targetUser)) {
+            throw new AuthorizationException("Cannot ban self");
+        }
+        if (!currentUser.isModeratorOrAdmin()) {
+            throw new AuthorizationException("Only moderators and admins can ban users");
+        }
+        if (targetUser.getRole() == Role.BLOCKED) {
+            throw new IllegalStateTransitionException("User is already banned");
+        }
+        if (targetUser.isModeratorOrAdmin()) {
+            throw new IllegalStateTransitionException("Cannot ban moderators or admins");
+        }
+    }
+
+    private void validateUnbanUser(User currentUser, User targetUser) {
+        if (currentUser.equals(targetUser)) {
+            throw new AuthorizationException("Cannot unban self");
+        }
+        if (!currentUser.isModeratorOrAdmin()) {
+            throw new AuthorizationException("Only moderators and admins can unban users");
+        }
+        if (targetUser.getRole() != Role.BLOCKED) {
+            throw new IllegalStateTransitionException("User is not banned");
         }
     }
 }

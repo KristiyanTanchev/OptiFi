@@ -7,6 +7,7 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -50,8 +51,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SamePasswordException.class)
     public ResponseEntity<ApiError> handleSamePassWordException(
             SamePasswordException e,
-            HttpServletRequest request){
+            HttpServletRequest request) {
         return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(IllegalStateTransitionException.class)
+    public ResponseEntity<ApiError> handleIllegalStateTransitionException(
+            IllegalStateTransitionException e,
+            HttpServletRequest request) {
+        return buildError(HttpStatus.CONFLICT, e.getMessage(), request, null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -70,6 +78,18 @@ public class GlobalExceptionHandler {
                 ));
 
         return buildError(HttpStatus.BAD_REQUEST, "Validation failed", request, fieldErrors);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ApiError> handleAuthorizationDeniedException(
+            HttpServletRequest request
+    ) {
+        return buildError(
+                HttpStatus.FORBIDDEN,
+                "Access denied",
+                request,
+                null
+        );
     }
 
     @ExceptionHandler(Exception.class)

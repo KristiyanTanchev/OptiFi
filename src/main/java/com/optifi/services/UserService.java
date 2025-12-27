@@ -2,9 +2,7 @@ package com.optifi.services;
 
 import com.optifi.models.Role;
 import com.optifi.models.User;
-import com.optifi.services.commands.ChangeEmailCommand;
-import com.optifi.services.commands.ChangePasswordCommand;
-import com.optifi.services.commands.RegisterUserCommand;
+import com.optifi.services.commands.*;
 import com.optifi.services.results.UserDetailsResult;
 import com.optifi.services.results.UserSummaryResult;
 
@@ -22,4 +20,12 @@ public interface UserService {
     void changeEmail(ChangeEmailCommand cmd);
 
     void deleteUser(Long userId, Long currentUserId);
+
+    void setPreferences(SetUserPreferenceCommand cmd, Long userId);
+
+    void changeUserRole(ChangeUserRoleCommand cmd);
+
+    void banUser(BanUserCommand cmd);
+
+    void unbanUser(UnbanUserCommand cmd);
 }

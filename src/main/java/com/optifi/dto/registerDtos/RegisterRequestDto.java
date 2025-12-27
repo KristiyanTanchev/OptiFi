@@ -1,6 +1,5 @@
 package com.optifi.dto.registerDtos;
 
-import com.optifi.services.commands.RegisterUserCommand;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -17,9 +16,6 @@ public record RegisterRequestDto(
         @NotBlank(message = "Email cannot be blank")
         @Email(message = "Email format is incorrect")
         String email
-        ) {
+) {
 
-    public RegisterUserCommand toCommand() {
-        return new RegisterUserCommand(username, password, email);
-    }
 }

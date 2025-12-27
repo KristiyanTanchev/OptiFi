@@ -100,4 +100,12 @@ public class User {
     public Set<Account> getAccounts() {
         return new HashSet<>(accounts);
     }
+
+    public boolean isAdmin() {
+        return role == Role.ADMIN;
+    }
+
+    public boolean isModeratorOrAdmin() {
+        return role == Role.ADMIN || role == Role.MODERATOR;
+    }
 }

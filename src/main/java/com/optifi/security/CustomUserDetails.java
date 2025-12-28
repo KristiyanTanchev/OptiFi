@@ -1,6 +1,6 @@
 package com.optifi.security;
 
-import com.optifi.models.Role;
+import com.optifi.domain.user.model.Role;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;

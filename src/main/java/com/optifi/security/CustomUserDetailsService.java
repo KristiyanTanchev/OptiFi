@@ -1,8 +1,8 @@
 package com.optifi.security;
 
-import com.optifi.models.Role;
-import com.optifi.models.User;
-import com.optifi.repositories.UserRepository;
+import com.optifi.domain.user.model.Role;
+import com.optifi.domain.user.model.User;
+import com.optifi.domain.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

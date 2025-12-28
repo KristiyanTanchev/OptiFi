@@ -1,6 +1,5 @@
 package com.optifi.exceptions;
 
-import com.optifi.dto.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -19,7 +18,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-@RestControllerAdvice(basePackages = "com.optifi.controllers")
+@RestControllerAdvice(basePackages = "com.optifi.domain")
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)

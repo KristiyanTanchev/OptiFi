@@ -7,6 +7,7 @@ public record UserDetailsResponseDto(
         long id,
         String username,
         String email,
+        String role,
         Currency currency,
         String locale
 ) {
@@ -15,6 +16,7 @@ public record UserDetailsResponseDto(
                 result.id(),
                 result.username(),
                 result.email(),
+                result.role().name(),
                 result.baseCurrency(),
                 result.locale()
         );

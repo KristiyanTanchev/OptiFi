@@ -1,13 +1,17 @@
 package com.optifi.models;
 
+import com.optifi.exceptions.EnumParsingError;
+
 public enum Currency {
     USD, EUR;
 
-    @Override
-    public String toString() {
-        return switch (this) {
-            case USD -> "dollars";
-            case EUR -> "euro";
-        };
+    public static Currency fromString(String value) {
+        for (Currency currency : values()) {
+            if (currency.name().equalsIgnoreCase(value)) {
+                return currency;
+            }
+        }
+
+        throw new EnumParsingError("currency", "Unsupported currency: " + value);
     }
 }

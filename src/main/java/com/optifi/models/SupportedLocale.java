@@ -1,9 +1,11 @@
 package com.optifi.models;
 
+import com.optifi.exceptions.EnumParsingError;
+
 public enum SupportedLocale {
     EN_US("en-US"),
     EN_GB("en-GB"),
-    DE_DE("bg-BG");
+    BG_BG("bg-BG");
 
     private final String tag;
 
@@ -13,5 +15,15 @@ public enum SupportedLocale {
 
     public String tag() {
         return tag;
+    }
+
+    public static SupportedLocale fromString(String value) {
+        for (SupportedLocale locale : values()) {
+            if (locale.tag.equalsIgnoreCase(value)) {
+                return locale;
+            }
+        }
+
+        throw new EnumParsingError("locale", "Unsupported locale: " + value);
     }
 }

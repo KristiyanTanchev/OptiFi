@@ -7,6 +7,7 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -60,6 +61,28 @@ public class GlobalExceptionHandler {
             IllegalStateTransitionException e,
             HttpServletRequest request) {
         return buildError(HttpStatus.CONFLICT, e.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiError> handleLockedException(
+            HttpServletRequest request
+    ) {
+        return buildError(HttpStatus.FORBIDDEN, "User is banned", request, null);
+    }
+
+    @ExceptionHandler(SameEmailException.class)
+    public ResponseEntity<ApiError> handleSameEmailException(
+            SameEmailException e,
+            HttpServletRequest request) {
+        return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(EnumParsingError.class)
+    public ResponseEntity<ApiError> handleEnumParsingError(
+            EnumParsingError e,
+            HttpServletRequest request) {
+        Map<String, String> fieldErrors = Map.of(e.getField(), e.getError());
+        return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, fieldErrors);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

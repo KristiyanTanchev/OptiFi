@@ -1,5 +1,6 @@
 package com.optifi.security;
 
+import com.optifi.models.Role;
 import com.optifi.models.User;
 import com.optifi.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 true, // enabled
                 true, // accountNonExpired
                 true, // credentialsNonExpired
-                true, // accountNonLocked
+                user.getRole() != Role.BLOCKED, // accountNonLocked
                 getAuthorities(user),
                 user.getId(),
                 user.getRole()

@@ -100,9 +100,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void setPreferences(SetUserPreferenceCommand cmd, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User", userId));
+    public void setPreferences(SetUserPreferenceCommand cmd) {
+        User user = userRepository.findById(cmd.userId())
+                .orElseThrow(() -> new EntityNotFoundException("User", cmd.userId()));
         user.setBaseCurrency(cmd.baseCurrency());
         user.setLocale(cmd.locale());
     }

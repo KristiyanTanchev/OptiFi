@@ -147,7 +147,7 @@ public class UserRestController {
             @AuthenticationPrincipal CustomUserDetails principal,
             @Valid @RequestBody UserPreferencesUpdateRequestDto dto) {
         SetUserPreferenceCommand cmd = SetUserPreferenceCommand.from(principal.getId(), dto.currency(), dto.locale());
-        userService.setPreferences(cmd, principal.getId());
+        userService.setPreferences(cmd);
         return ResponseEntity.noContent().build();
     }
 

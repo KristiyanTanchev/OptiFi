@@ -22,7 +22,7 @@ public interface UserService {
 
     void deleteUser(Long userId, Long currentUserId);
 
-    void setPreferences(SetUserPreferenceCommand cmd, Long userId);
+    void setPreferences(SetUserPreferenceCommand cmd);
 
     void changeUserRole(ChangeUserRoleCommand cmd);
 

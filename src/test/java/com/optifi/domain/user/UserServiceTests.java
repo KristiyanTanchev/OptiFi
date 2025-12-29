@@ -1,12 +1,13 @@
 package com.optifi.domain.user;
 
+import com.optifi.domain.shared.model.Currency;
 import com.optifi.domain.user.application.UserServiceImpl;
+import com.optifi.domain.user.application.command.*;
+import com.optifi.domain.user.model.SupportedLocale;
 import com.optifi.exceptions.*;
 import com.optifi.domain.user.model.Role;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
-import com.optifi.domain.user.application.command.ChangeEmailCommand;
-import com.optifi.domain.user.application.command.ChangePasswordCommand;
 import com.optifi.domain.auth.application.command.RegisterUserCommand;
 import com.optifi.domain.user.application.result.UserDetailsResult;
 import com.optifi.domain.user.application.result.UserSummaryResult;
@@ -110,6 +111,19 @@ public class UserServiceTests {
         assertThrows(DuplicateEntityException.class,
                 () -> userService.createUser(
                         new RegisterUserCommand("john", "pass", ""), Role.USER)
+        );
+
+        verify(userRepository).existsByUsername("john");
+        verifyNoInteractions(passwordEncoder);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void createUser_Should_throwDuplicateEntityException_When_emailExists() {
+        when(userRepository.existsByEmail("email")).thenReturn(true);
+        assertThrows(DuplicateEntityException.class,
+                () -> userService.createUser(
+                        new RegisterUserCommand("john", "pass", "email"), Role.USER)
         );
 
         verify(userRepository).existsByUsername("john");
@@ -255,6 +269,17 @@ public class UserServiceTests {
     }
 
     @Test
+    void deleteUser_Should_deleteUser_When_adminDeletesSelfAndHasMoreThanOneAdmin() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.countByRole(Role.ADMIN)).thenReturn(2L);
+
+        userService.deleteUser(1L, 1L);
+
+        verify(userRepository).deleteById(1L);
+    }
+
+    @Test
     void deleteUser_Should_throwException_When_nonAdminDeletesOtherUser() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(user1));
 
@@ -273,5 +298,295 @@ public class UserServiceTests {
                 () -> userService.deleteUser(1L, 1L));
 
         verify(userRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void deleteUser_Should_throwException_When_targetDoesNotExist() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        when(userRepository.existsById(2L)).thenReturn(false);
+
+        assertThrows(EntityNotFoundException.class,
+                () -> userService.deleteUser(2L, 1L));
+
+        verify(userRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void setPreferences_Should_throwException_When_userDoesNotExist() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> userService.setPreferences(
+                        new SetUserPreferenceCommand(
+                                1L,
+                                Currency.values()[0],
+                                SupportedLocale.values()[0]
+                        )
+                )
+        );
+    }
+
+    @Test
+    void setPreferences_Should_savePreferences_When_userExists() {
+        User user = User.builder().build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        userService.setPreferences(
+                SetUserPreferenceCommand.from(
+                        1L,
+                        Currency.USD.name(),
+                        SupportedLocale.BG_BG.tag()
+                )
+        );
+        assertEquals(Currency.USD, user.getBaseCurrency());
+        assertEquals(SupportedLocale.BG_BG, user.getLocale());
+    }
+
+    @Test
+    void changeUserRole_Should_throwException_When_currentUserDoesNotExist() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_ADMIN;
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> userService.changeUserRole(cmd)
+        );
+    }
+
+    @Test
+    void changeUserRole_Should_throwException_When_targetUserDoesNotExist() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_ADMIN;
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user1));
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> userService.changeUserRole(cmd)
+        );
+    }
+
+    @Test
+    void changeUserRole_Should_throwException_When_currentUserIsNotAdmin() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_ADMIN;
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user1));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        assertThrows(AuthorizationException.class,
+                () -> userService.changeUserRole(cmd)
+        );
+    }
+
+    @Test
+    void changeUserRole_Should_throwException_When_currentUserMatchesTargetUser() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_ADMIN;
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 1L, action);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        assertThrows(AuthorizationException.class,
+                () -> userService.changeUserRole(cmd)
+        );
+    }
+
+    @Test
+    void changeUserRole_Should_throwException_When_targetUserIsBlocked() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_ADMIN;
+        user2.setRole(Role.BLOCKED);
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        assertThrows(IllegalStateTransitionException.class,
+                () -> userService.changeUserRole(cmd)
+        );
+    }
+
+    @Test
+    void changeUserRole_Should_throwException_When_promotingToAdminAndTargetUserIsAlreadyAdmin() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_ADMIN;
+        user2.setRole(Role.ADMIN);
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        assertThrows(IllegalStateTransitionException.class,
+                () -> userService.changeUserRole(cmd)
+        );
+    }
+
+    @Test
+    void changeUserRole_Should_throwException_When_promotingToModeratorAndTargetUserIsAlreadyAdmin() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_MODERATOR;
+        user2.setRole(Role.ADMIN);
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        assertThrows(IllegalStateTransitionException.class,
+                () -> userService.changeUserRole(cmd)
+        );
+    }
+
+    @Test
+    void changeUserRole_Should_throwException_When_promotingToModeratorAndTargetUserIsAlreadyModerator() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_MODERATOR;
+        user2.setRole(Role.MODERATOR);
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        assertThrows(IllegalStateTransitionException.class,
+                () -> userService.changeUserRole(cmd)
+        );
+    }
+
+    @Test
+    void changeUserRole_Should_throwException_When_demoteToUserAndTargetUserIsNotModeratorOrAdmin() {
+        RoleChangeAction action = RoleChangeAction.DEMOTE_TO_USER;
+        user2.setRole(Role.USER);
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        assertThrows(IllegalStateTransitionException.class,
+                () -> userService.changeUserRole(cmd)
+        );
+    }
+
+    @Test
+    void changeUserRole_Should_succeed_When_promotingToAdminValid() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_ADMIN;
+        user2.setRole(Role.USER);
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        userService.changeUserRole(cmd);
+        assertEquals(Role.ADMIN, user2.getRole());
+    }
+
+    @Test
+    void changeUserRole_Should_succeed_When_promotingToModeratorValid() {
+        RoleChangeAction action = RoleChangeAction.PROMOTE_TO_MODERATOR;
+        user2.setRole(Role.USER);
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        userService.changeUserRole(cmd);
+        assertEquals(Role.MODERATOR, user2.getRole());
+    }
+
+    @Test
+    void changeUserRole_Should_succeed_When_demoteAdminToUserValid() {
+        RoleChangeAction action = RoleChangeAction.DEMOTE_TO_USER;
+        user2.setRole(Role.ADMIN);
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        userService.changeUserRole(cmd);
+        assertEquals(Role.USER, user2.getRole());
+    }
+
+    @Test
+    void changeUserRole_Should_succeed_When_demoteModeratorToUserValid() {
+        RoleChangeAction action = RoleChangeAction.DEMOTE_TO_USER;
+        user2.setRole(Role.MODERATOR);
+        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        userService.changeUserRole(cmd);
+        assertEquals(Role.USER, user2.getRole());
+    }
+
+    @Test
+    void banUser_Should_throwError_When_currentUserDoesNotExist(){
+        when(userRepository.findById(2L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> userService.banUser(new BanUserCommand(1L, 2L)));
+    }
+
+    @Test
+    void banUser_Should_throwError_When_targetUserDoesNotExist(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> userService.banUser(new BanUserCommand(1L, 2L)));
+    }
+
+    @Test
+    void banUser_Should_throwError_When_currentUserMatchesTargetUser(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        assertThrows(AuthorizationException.class,
+                () -> userService.banUser(new BanUserCommand(2L, 2L)));
+    }
+
+    @Test
+    void banUser_Should_throwError_When_currentUserIsNotAdminOrModerator(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user1));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        assertThrows(AuthorizationException.class,
+                () -> userService.banUser(new BanUserCommand(1L, 2L)));
+    }
+
+    @Test
+    void banUser_Should_throwError_When_targetUserIsBlocked(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        user2.setRole(Role.BLOCKED);
+        assertThrows(IllegalStateTransitionException.class,
+                () -> userService.banUser(new BanUserCommand(1L, 2L)));
+    }
+
+    @Test
+    void banUser_Should_throwError_When_targetUserIsAdmin(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        user2.setRole(Role.ADMIN);
+        assertThrows(IllegalStateTransitionException.class,
+                () -> userService.banUser(new BanUserCommand(1L, 2L)));
+    }
+
+    @Test
+    void banUser_Should_succeed_When_targetValid(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        userService.banUser(new BanUserCommand(1L, 2L));
+        assertEquals(Role.BLOCKED, user2.getRole());
+    }
+
+    @Test
+    void unbanUser_Should_throwError_When_currentUserDoesNotExist(){
+        when(userRepository.findById(2L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> userService.unbanUser(new UnbanUserCommand(1L, 2L)));
+    }
+
+    @Test
+    void unbanUser_Should_throwError_When_targetUserDoesNotExist(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> userService.unbanUser(new UnbanUserCommand(1L, 2L)));
+    }
+
+    @Test
+    void unbanUser_Should_throwError_When_currentUserMatchesTargetUser(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        assertThrows(AuthorizationException.class,
+                () -> userService.unbanUser(new UnbanUserCommand(2L, 2L)));
+    }
+
+    @Test
+    void unbanUser_Should_throwError_When_currentUserIsNotAdminOrModerator(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user1));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        assertThrows(AuthorizationException.class,
+                () -> userService.unbanUser(new UnbanUserCommand(1L, 2L)));
+    }
+
+    @Test
+    void unbanUser_Should_throwError_When_targetUserIsNotBlocked(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        assertThrows(IllegalStateTransitionException.class,
+                () -> userService.unbanUser(new UnbanUserCommand(1L, 2L)));
+    }
+
+    @Test
+    void unbanUser_Should_succeed_When_targetValid(){
+        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        user2.setRole(Role.BLOCKED);
+        userService.unbanUser(new UnbanUserCommand(1L, 2L));
+        assertEquals(Role.USER, user2.getRole());
     }
 }

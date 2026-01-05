@@ -1,6 +1,7 @@
 package com.optifi.domain.account.model;
 
 import com.optifi.domain.shared.model.Currency;
+import com.optifi.domain.transaction.model.Transaction;
 import com.optifi.domain.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,6 +9,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -46,6 +49,10 @@ public class Account {
     @Enumerated(EnumType.STRING)
     @Column(name = "currency", nullable = false)
     private Currency currency;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Transaction> transactions = new HashSet<>();
 
     @Column(name = "institution", length = 100)
     private String institution;

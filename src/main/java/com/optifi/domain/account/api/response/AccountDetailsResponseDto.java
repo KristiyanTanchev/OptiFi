@@ -6,7 +6,7 @@ import com.optifi.domain.transaction.api.response.TransactionSummaryResponseDto;
 import java.time.Instant;
 import java.util.List;
 
-public record AccountDetailsResposneDto(
+public record AccountDetailsResponseDto(
         long id,
         String name,
         String type,
@@ -17,8 +17,8 @@ public record AccountDetailsResposneDto(
         Instant createdAt,
         Instant updatedAt
 ) {
-    public static AccountDetailsResposneDto fromResult(AccountDetailsResult result) {
-        return new AccountDetailsResposneDto(
+    public static AccountDetailsResponseDto fromResult(AccountDetailsResult result) {
+        return new AccountDetailsResponseDto(
                 result.id(),
                 result.name(),
                 result.type(),

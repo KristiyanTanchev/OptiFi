@@ -1,7 +1,7 @@
 package com.optifi.domain.account.api;
 
 import com.optifi.domain.account.api.request.AccountCreateRequestDto;
-import com.optifi.domain.account.api.response.AccountDetailsResposneDto;
+import com.optifi.domain.account.api.response.AccountDetailsResponseDto;
 import com.optifi.domain.account.api.response.AccountSummaryResponseDto;
 import com.optifi.domain.account.application.AccountService;
 import com.optifi.domain.account.application.command.CreateAccountCommand;
@@ -10,7 +10,9 @@ import com.optifi.domain.account.application.result.AccountSummaryResult;
 import com.optifi.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +25,7 @@ public class AccountRestController {
     private final AccountService accountService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AccountSummaryResponseDto>> getAllOwnAccounts(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -32,7 +35,8 @@ public class AccountRestController {
     }
 
     @PostMapping
-    public ResponseEntity<AccountDetailsResposneDto> createAccount(
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AccountDetailsResponseDto> createAccount(
             @Valid @RequestBody AccountCreateRequestDto dto,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -44,7 +48,7 @@ public class AccountRestController {
                 dto.institution()
         );
         AccountDetailsResult result = accountService.createAccount(cmd);
-        AccountDetailsResposneDto responseDto = AccountDetailsResposneDto.fromResult(result);
-        return ResponseEntity.ok(responseDto);
+        AccountDetailsResponseDto responseDto = AccountDetailsResponseDto.fromResult(result);
+        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 }

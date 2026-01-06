@@ -69,4 +69,34 @@ public class AccountRestController {
         accountService.updateAccount(cmd);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/archive")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> archiveAccount(
+            @PathVariable long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        accountService.archiveAccount(id, userDetails.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/unarchive")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> unarchiveAccount(
+            @PathVariable long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        accountService.unarchiveAccount(id, userDetails.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteAccount(
+            @PathVariable long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        accountService.deleteAccount(id, userDetails.getId());
+        return ResponseEntity.noContent().build();
+    }
 }

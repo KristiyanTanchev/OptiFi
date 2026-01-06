@@ -8,8 +8,10 @@ import com.optifi.domain.account.repository.AccountRepository;
 import com.optifi.domain.account.application.result.AccountSummaryResult;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
+import com.optifi.exceptions.AuthorizationException;
 import com.optifi.exceptions.DuplicateEntityException;
 import com.optifi.exceptions.EntityNotFoundException;
+import com.optifi.exceptions.IllegalStateTransitionException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +69,60 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void updateAccount(AccountUpdateCommand cmd) {
+        Account account = loadAccountAuthorized(cmd.accountId(), cmd.userId());
+        if (!account.getName().equals(cmd.name()) &&
+                accountRepository.existsByUserIdAndName(cmd.userId(), cmd.name())) {
+            throw new DuplicateEntityException("Account", "name", cmd.name());
+        }
+        account.setName(cmd.name());
+        account.setType(cmd.type());
+        account.setCurrency(cmd.currency());
+        account.setInstitution(cmd.institution());
+        accountRepository.save(account);
+    }
 
+    @Override
+    public void archiveAccount(long accountId, long userId) {
+        Account account = loadAccountAuthorized(accountId, userId);
+        if (account.isArchived()) {
+            throw new IllegalStateTransitionException("Account is already archived");
+        }
+        account.setArchived(true);
+        accountRepository.save(account);
+    }
+
+    @Override
+    public void unarchiveAccount(long accountId, long userId) {
+        Account account = loadAccountAuthorized(accountId, userId);
+        if (!account.isArchived()) {
+            throw new IllegalStateTransitionException("Account is not archived");
+        }
+        account.setArchived(false);
+        accountRepository.save(account);
+    }
+
+    @Override
+    public void deleteAccount(long accountId, long userId) {
+        Account account = loadAccountAuthorized(accountId, userId);
+        accountRepository.delete(account);
+    }
+
+    private Account loadAccountAuthorized(long accountId, long userId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new EntityNotFoundException("Account", accountId));
+
+        if (accountRepository.existsByIdAndUserId(accountId, userId)) {
+            return account;
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User", userId));
+
+        if (!user.isAdmin()) {
+            throw new AuthorizationException("You cannot modify this account");
+        }
+
+        return account;
     }
 
 }

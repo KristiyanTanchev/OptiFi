@@ -15,4 +15,10 @@ public interface AccountService {
     AccountDetailsResult getAccountById(long accountId, long userId);
 
     void updateAccount(AccountUpdateCommand cmd);
+
+    void archiveAccount(long accountId, long userId);
+
+    void unarchiveAccount(long accountId, long userId);
+
+    void deleteAccount(long accountId, long userId);
 }

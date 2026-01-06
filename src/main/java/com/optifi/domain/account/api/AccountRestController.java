@@ -4,6 +4,7 @@ import com.optifi.domain.account.api.request.AccountCreateRequestDto;
 import com.optifi.domain.account.api.response.AccountDetailsResponseDto;
 import com.optifi.domain.account.api.response.AccountSummaryResponseDto;
 import com.optifi.domain.account.application.AccountService;
+import com.optifi.domain.account.application.command.AccountUpdateCommand;
 import com.optifi.domain.account.application.command.CreateAccountCommand;
 import com.optifi.domain.account.application.result.AccountDetailsResult;
 import com.optifi.domain.account.application.result.AccountSummaryResult;
@@ -40,15 +41,32 @@ public class AccountRestController {
             @Valid @RequestBody AccountCreateRequestDto dto,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        CreateAccountCommand cmd = CreateAccountCommand.from(
-                userDetails.getId(),
-                dto.name(),
-                dto.type(),
-                dto.currency(),
-                dto.institution()
-        );
+        CreateAccountCommand cmd = dto.toCreateCommand(userDetails.getId());
         AccountDetailsResult result = accountService.createAccount(cmd);
         AccountDetailsResponseDto responseDto = AccountDetailsResponseDto.fromResult(result);
         return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AccountDetailsResponseDto> getAccountById(
+            @PathVariable long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        AccountDetailsResult result = accountService.getAccountById(id, userDetails.getId());
+        AccountDetailsResponseDto responseDto = AccountDetailsResponseDto.fromResult(result);
+        return ResponseEntity.ok(responseDto);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> updateAccount(
+            @PathVariable long id,
+            @Valid @RequestBody AccountCreateRequestDto dto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        AccountUpdateCommand cmd = dto.toUpdateCommand(id, userDetails.getId());
+        accountService.updateAccount(cmd);
+        return ResponseEntity.noContent().build();
     }
 }

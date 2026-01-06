@@ -1,5 +1,6 @@
 package com.optifi.domain.account.application;
 
+import com.optifi.domain.account.application.command.AccountUpdateCommand;
 import com.optifi.domain.account.application.command.CreateAccountCommand;
 import com.optifi.domain.account.application.result.AccountDetailsResult;
 import com.optifi.domain.account.model.Account;
@@ -51,6 +52,22 @@ public class AccountServiceImpl implements AccountService {
                 .type(cmd.type())
                 .build();
         return AccountDetailsResult.fromEntity(accountRepository.save(account));
+    }
+
+    @Override
+    public AccountDetailsResult getAccountById(long accountId, long userId) {
+        Account account = accountRepository.findById(accountId).orElseThrow(
+                () -> new EntityNotFoundException("Account", accountId)
+        );
+        if (!account.getUser().getId().equals(userId)) {
+            throw new EntityNotFoundException("Account", accountId);
+        }
+        return AccountDetailsResult.fromEntity(account);
+    }
+
+    @Override
+    public void updateAccount(AccountUpdateCommand cmd) {
+
     }
 
 }

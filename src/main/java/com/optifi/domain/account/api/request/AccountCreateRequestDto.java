@@ -1,5 +1,7 @@
 package com.optifi.domain.account.api.request;
 
+import com.optifi.domain.account.application.command.AccountUpdateCommand;
+import com.optifi.domain.account.application.command.CreateAccountCommand;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,4 +18,12 @@ public record AccountCreateRequestDto(
         String currency,
 
         String institution) {
+
+    public CreateAccountCommand toCreateCommand(long userId) {
+        return CreateAccountCommand.from(userId, name, type, currency, institution);
+    }
+
+    public AccountUpdateCommand toUpdateCommand(long userId, long accountId) {
+        return AccountUpdateCommand.from(accountId, userId, name, type, currency, institution);
+    }
 }

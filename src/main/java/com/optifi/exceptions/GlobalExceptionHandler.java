@@ -3,6 +3,7 @@ package com.optifi.exceptions;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -82,6 +83,14 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
         Map<String, String> fieldErrors = Map.of(e.getField(), e.getError());
         return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, fieldErrors);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrityViolationException(
+            DataIntegrityViolationException e,
+            HttpServletRequest request
+    ) {
+        return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

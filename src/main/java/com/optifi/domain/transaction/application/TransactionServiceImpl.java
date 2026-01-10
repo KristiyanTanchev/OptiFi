@@ -3,6 +3,7 @@ package com.optifi.domain.transaction.application;
 import com.optifi.domain.account.model.Account;
 import com.optifi.domain.account.repository.AccountRepository;
 import com.optifi.domain.transaction.application.command.TransactionQuery;
+import com.optifi.domain.transaction.application.command.TransactionSpecs;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
 import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
 import com.optifi.domain.transaction.model.Transaction;
@@ -23,7 +24,7 @@ import java.math.BigDecimal;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class TransactionServiceImpl implements TransactionService{
+public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
@@ -38,26 +39,32 @@ public class TransactionServiceImpl implements TransactionService{
     }
 
     @Override
-    public TransactionDetailsResult getTransaction(long id) {
+    public TransactionDetailsResult getTransaction(Long id, Long userId) {
+        Transaction transaction = transactionRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Transaction", id)
+        );
+        if (!transaction.getAccount().getUser().getId().equals(userId)) {
+            throw new AuthorizationException("You are not authorized to view this transaction");
+        }
+        return TransactionDetailsResult.fromEntity(transaction);
+    }
+
+    @Override
+    public TransactionDetailsResult createTransaction(Long accountId, BigDecimal amount) {
         return null;
     }
 
     @Override
-    public TransactionDetailsResult createTransaction(long accountId, BigDecimal amount) {
-        return null;
-    }
-
-    @Override
-    public void updateTransaction(long id, BigDecimal amount, String description) {
+    public void updateTransaction(Long id, BigDecimal amount, String description) {
 
     }
 
     @Override
-    public void deleteTransaction(long id) {
+    public void deleteTransaction(Long id) {
 
     }
 
-    private Account loadAccountAuthorized(long accountId, long userId) {
+    private Account loadAccountAuthorized(Long accountId, Long userId) {
         User requestedUser = userRepository.findById(userId).orElseThrow(
                 () -> new EntityNotFoundException("User", userId)
         );
@@ -65,9 +72,6 @@ public class TransactionServiceImpl implements TransactionService{
                 () -> new EntityNotFoundException("Account", accountId)
         );
         if (requestedUser.getId().equals(account.getUser().getId())) {
-            return account;
-        }
-        if (requestedUser.isAdmin()) {
             return account;
         }
         throw new AuthorizationException("You are not authorized to modify this account");

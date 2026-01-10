@@ -11,11 +11,11 @@ import java.math.BigDecimal;
 public interface TransactionService {
     Page<TransactionSummaryResult> getAllUserTransactions(TransactionQuery query, Pageable pageable);
 
-    TransactionDetailsResult getTransaction(long id);
+    TransactionDetailsResult getTransaction(Long id, Long userId);
 
-    TransactionDetailsResult createTransaction(long accountId, BigDecimal amount);
+    TransactionDetailsResult createTransaction(Long accountId, BigDecimal amount);
 
-    void updateTransaction(long id, BigDecimal amount, String description);
+    void updateTransaction(Long id, BigDecimal amount, String description);
 
-    void deleteTransaction(long id);
+    void deleteTransaction(Long id);
 }

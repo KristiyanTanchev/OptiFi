@@ -9,16 +9,14 @@ public record TransactionSummaryResponseDto(
         long id,
         long accountId,
         Instant occurredAt,
-        BigDecimal amount,
-        String description
+        BigDecimal amount
 ) {
     public static TransactionSummaryResponseDto fromResult(TransactionSummaryResult result) {
         return new TransactionSummaryResponseDto(
                 result.id(),
                 result.accountId(),
                 result.occurredAt(),
-                result.amount(),
-                result.description()
+                result.amount()
         );
     }
 }

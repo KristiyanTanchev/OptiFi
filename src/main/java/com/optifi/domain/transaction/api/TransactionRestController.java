@@ -1,10 +1,14 @@
 package com.optifi.domain.transaction.api;
 
 import com.optifi.domain.transaction.api.request.GetUserTransactionsRequestDto;
+import com.optifi.domain.transaction.api.request.TransactionCreateRequestDto;
+import com.optifi.domain.transaction.api.request.TransactionUpdateRequestDto;
 import com.optifi.domain.transaction.api.response.TransactionDetailsResponseDto;
 import com.optifi.domain.transaction.api.response.TransactionSummaryResponseDto;
 import com.optifi.domain.transaction.application.TransactionService;
+import com.optifi.domain.transaction.application.command.TransactionCreateCommand;
 import com.optifi.domain.transaction.application.command.TransactionQuery;
+import com.optifi.domain.transaction.application.command.TransactionUpdateCommand;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
 import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
 import com.optifi.security.CustomUserDetails;
@@ -44,5 +48,36 @@ public class TransactionRestController {
         TransactionDetailsResult result = transactionService.getTransaction(id, userDetails.getId());
         TransactionDetailsResponseDto responseDto = TransactionDetailsResponseDto.fromResult(result);
         return ResponseEntity.ok(responseDto);
+    }
+
+    @PostMapping
+    public ResponseEntity<TransactionDetailsResponseDto> createTransaction(
+            @RequestBody @Valid TransactionCreateRequestDto dto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        TransactionCreateCommand cmd = dto.toCreateCommand(userDetails.getId());
+        TransactionDetailsResult result = transactionService.createTransaction(cmd);
+        TransactionDetailsResponseDto responseDto = TransactionDetailsResponseDto.fromResult(result);
+        return ResponseEntity.ok(responseDto);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateTransaction(
+            @PathVariable Long id,
+            @RequestBody @Valid TransactionUpdateRequestDto dto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        TransactionUpdateCommand cmd = dto.toUpdateCommand(id, userDetails.getId());
+        transactionService.updateTransaction(cmd);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTransaction(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        transactionService.deleteTransaction(id, userDetails.getId());
+        return ResponseEntity.noContent().build();
     }
 }

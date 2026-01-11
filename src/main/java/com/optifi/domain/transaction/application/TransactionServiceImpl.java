@@ -2,14 +2,14 @@ package com.optifi.domain.transaction.application;
 
 import com.optifi.domain.account.model.Account;
 import com.optifi.domain.account.repository.AccountRepository;
+import com.optifi.domain.transaction.application.command.TransactionCreateCommand;
 import com.optifi.domain.transaction.application.command.TransactionQuery;
 import com.optifi.domain.transaction.application.command.TransactionSpecs;
+import com.optifi.domain.transaction.application.command.TransactionUpdateCommand;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
 import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
 import com.optifi.domain.transaction.model.Transaction;
 import com.optifi.domain.transaction.repository.TransactionRepository;
-import com.optifi.domain.user.model.User;
-import com.optifi.domain.user.repository.UserRepository;
 import com.optifi.exceptions.AuthorizationException;
 import com.optifi.exceptions.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,18 +19,16 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public Page<TransactionSummaryResult> getAllUserTransactions(TransactionQuery query, Pageable pageable) {
         loadAccountAuthorized(query.accountId(), query.userId());
         Specification<Transaction> spec = TransactionSpecs.fromQuery(query);
@@ -39,6 +37,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TransactionDetailsResult getTransaction(Long id, Long userId) {
         Transaction transaction = transactionRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Transaction", id)
@@ -50,30 +49,44 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public TransactionDetailsResult createTransaction(Long accountId, BigDecimal amount) {
-        return null;
+    public TransactionDetailsResult createTransaction(TransactionCreateCommand cmd) {
+        Account account = loadAccountAuthorized(cmd.accountId(), cmd.userId());
+        Transaction transaction = cmd.toEntity(account);
+        return TransactionDetailsResult.fromEntity(transactionRepository.save(transaction));
     }
 
     @Override
-    public void updateTransaction(Long id, BigDecimal amount, String description) {
-
+    public void updateTransaction(TransactionUpdateCommand cmd) {
+        Transaction transaction = loadTransactionAuthorized(cmd.id(), cmd.userId());
+        transaction.setAmount(cmd.amount());
+        transaction.setDescription(cmd.description());
+        transaction.setOccurredAt(cmd.occurredAt());
+        transactionRepository.save(transaction);
     }
 
     @Override
-    public void deleteTransaction(Long id) {
-
+    public void deleteTransaction(Long id, Long userId) {
+        Transaction transaction = loadTransactionAuthorized(id, userId);
+        transactionRepository.delete(transaction);
     }
 
     private Account loadAccountAuthorized(Long accountId, Long userId) {
-        User requestedUser = userRepository.findById(userId).orElseThrow(
-                () -> new EntityNotFoundException("User", userId)
-        );
         Account account = accountRepository.findById(accountId).orElseThrow(
                 () -> new EntityNotFoundException("Account", accountId)
         );
-        if (requestedUser.getId().equals(account.getUser().getId())) {
+        if (userId.equals(account.getUser().getId())) {
             return account;
         }
         throw new AuthorizationException("You are not authorized to modify this account");
+    }
+
+    private Transaction loadTransactionAuthorized(Long id, Long userId) {
+        Transaction transaction = transactionRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Transaction", id)
+        );
+        if (userId.equals(transaction.getAccount().getUser().getId())) {
+            return transaction;
+        }
+        throw new AuthorizationException("You are not authorized to modify this transaction");
     }
 }

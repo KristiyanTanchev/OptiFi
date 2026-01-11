@@ -4,7 +4,7 @@ import com.optifi.domain.transaction.model.Transaction;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 
 public class TransactionSpecs {
 
@@ -22,24 +22,24 @@ public class TransactionSpecs {
 
     private static Specification<Transaction> userFilter(Long userId) {
         return (root, query, cb) ->
-                userId == null ? cb.conjunction() : cb.equal(root.get("account").get("user").get("id"), userId);
+                cb.equal(root.get("account").get("user").get("id"), userId);
     }
 
     private static Specification<Transaction> accountFilter(Long accountId) {
         return (root, query, cb) ->
-                accountId == null ? cb.conjunction() : cb.equal(root.get("account").get("id"), accountId);
+                cb.equal(root.get("account").get("id"), accountId);
     }
 
-    private static Specification<Transaction> dateFrom(LocalDate dateFrom) {
+    private static Specification<Transaction> dateFrom(Instant dateFrom) {
         return (root, query, cb) ->
                 dateFrom == null ? cb.conjunction() :
-                        cb.greaterThanOrEqualTo(root.get("date"), dateFrom);
+                        cb.greaterThanOrEqualTo(root.get("occurredAt"), dateFrom);
     }
 
-    private static Specification<Transaction> dateTo(LocalDate dateTo) {
+    private static Specification<Transaction> dateTo(Instant dateTo) {
         return (root, query, cb) ->
                 dateTo == null ? cb.conjunction() :
-                        cb.lessThanOrEqualTo(root.get("date"), dateTo);
+                        cb.lessThan(root.get("occurredAt"), dateTo);
     }
 
     private static Specification<Transaction> minAmount(BigDecimal minAmount) {

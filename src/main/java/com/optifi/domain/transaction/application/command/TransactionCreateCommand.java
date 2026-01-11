@@ -13,16 +13,6 @@ public record TransactionCreateCommand(
         String description,
         Instant occurredAt
 ) {
-    public static TransactionCreateCommand from(
-            Long userId,
-            Long accountId,
-            BigDecimal amount,
-            String description,
-            String occurredAt) {
-        Instant occurredAtInstant = Instant.parse(occurredAt);
-        return new TransactionCreateCommand(userId, accountId, amount, description, occurredAtInstant);
-    }
-
     public Transaction toEntity(Account account) {
         return Transaction.builder()
                 .account(account)

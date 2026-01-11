@@ -1,13 +1,13 @@
 package com.optifi.domain.transaction.application.command;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 
 public record TransactionQuery(
         Long userId,
         Long accountId,
-        LocalDate from,
-        LocalDate to,
+        Instant from,
+        Instant to,
         BigDecimal min,
         BigDecimal max,
         String description

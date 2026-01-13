@@ -1,6 +1,7 @@
 package com.optifi.domain.transaction.model;
 
 import com.optifi.domain.account.model.Account;
+import com.optifi.domain.category.model.Category;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -38,6 +39,10 @@ public class Transaction {
 
     @Column(name = "occurred_at", nullable = false)
     private Instant occurredAt;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

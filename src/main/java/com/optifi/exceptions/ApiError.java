@@ -1,14 +1,15 @@
 package com.optifi.exceptions;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 
 public record ApiError(
-        LocalDateTime timestamp,
+        Instant timestamp,
         int status,
         String error,
         String message,
         String path,
-        Map<String, String> fieldErrors
+        String code,
+        Map<String, Object> details
 ) {
 }

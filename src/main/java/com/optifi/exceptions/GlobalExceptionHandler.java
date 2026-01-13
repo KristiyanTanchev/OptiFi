@@ -6,15 +6,15 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -22,67 +22,16 @@ import java.util.stream.Collectors;
 @RestControllerAdvice(basePackages = "com.optifi.domain")
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiError> handleBadCredentialsException(
-            HttpServletRequest request) {
-        return buildError(HttpStatus.UNAUTHORIZED, "Invalid username or password", request, null);
-    }
-
-    @ExceptionHandler(DuplicateEntityException.class)
-    public ResponseEntity<ApiError> handleDuplicateEntityException(
-            DuplicateEntityException e,
-            HttpServletRequest request) {
-        return buildError(HttpStatus.CONFLICT, e.getMessage(), request, null);
-    }
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ApiError> handleEntityNotFoundException(
-            EntityNotFoundException e,
-            HttpServletRequest request) {
-        return buildError(HttpStatus.NOT_FOUND, e.getMessage(), request, null);
-    }
-
-    @ExceptionHandler(AuthorizationException.class)
-    public ResponseEntity<ApiError> handleAuthorizationException(
-            AuthorizationException e,
-            HttpServletRequest request) {
-        return buildError(HttpStatus.FORBIDDEN, e.getMessage(), request, null);
-    }
-
-    @ExceptionHandler(SamePasswordException.class)
-    public ResponseEntity<ApiError> handleSamePassWordException(
-            SamePasswordException e,
-            HttpServletRequest request) {
-        return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, null);
-    }
-
-    @ExceptionHandler(IllegalStateTransitionException.class)
-    public ResponseEntity<ApiError> handleIllegalStateTransitionException(
-            IllegalStateTransitionException e,
-            HttpServletRequest request) {
-        return buildError(HttpStatus.CONFLICT, e.getMessage(), request, null);
-    }
-
-    @ExceptionHandler(LockedException.class)
-    public ResponseEntity<ApiError> handleLockedException(
-            HttpServletRequest request
-    ) {
-        return buildError(HttpStatus.FORBIDDEN, "User is banned", request, null);
-    }
-
-    @ExceptionHandler(SameEmailException.class)
-    public ResponseEntity<ApiError> handleSameEmailException(
-            SameEmailException e,
-            HttpServletRequest request) {
-        return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, null);
-    }
-
-    @ExceptionHandler(EnumParsingError.class)
-    public ResponseEntity<ApiError> handleEnumParsingError(
-            EnumParsingError e,
-            HttpServletRequest request) {
-        Map<String, String> fieldErrors = Map.of(e.getField(), e.getError());
-        return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, fieldErrors);
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiError> handleApi(ApiException ex, HttpServletRequest req) {
+        return buildError(
+                ex.code().status(),
+                ex.getMessage(),
+                req,
+                ex.code().name(),
+                ex.details(),
+                null
+        );
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -90,7 +39,16 @@ public class GlobalExceptionHandler {
             DataIntegrityViolationException e,
             HttpServletRequest request
     ) {
-        return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, null);
+        log.warn("Data integrity violation: {}", e.getMostSpecificCause().getMessage());
+        ErrorCode errorCode = ErrorCode.DATA_INTEGRITY;
+        return buildError(
+                errorCode.status(),
+                errorCode.defaultMessage(),
+                request,
+                errorCode.name(),
+                null,
+                null
+        );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -107,18 +65,42 @@ public class GlobalExceptionHandler {
                         (msg1, msg2) -> msg1,
                         java.util.LinkedHashMap::new
                 ));
-
-        return buildError(HttpStatus.BAD_REQUEST, "Validation failed", request, fieldErrors);
+        ErrorCode code = ErrorCode.VALIDATION;
+        return buildError(code.status(),
+                code.defaultMessage(),
+                request,
+                code.name(),
+                null,
+                fieldErrors
+        );
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
     public ResponseEntity<ApiError> handleAuthorizationDeniedException(
             HttpServletRequest request
     ) {
-        return buildError(
-                HttpStatus.FORBIDDEN,
-                "Access denied",
+        ErrorCode code = ErrorCode.FORBIDDEN;
+        return buildError(code.status(),
+                code.defaultMessage(),
                 request,
+                code.name(),
+                null,
+                null
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(
+            MethodArgumentTypeMismatchException e,
+            HttpServletRequest request
+    ) {
+        ErrorCode code = ErrorCode.BAD_REQUEST;
+        return buildError(
+                code.status(),
+                "Invalid value for parameter '" + e.getName() + "'",
+                request,
+                code.name(),
+                Map.of("parameter", e.getName(), "value", String.valueOf(e.getValue())),
                 null
         );
     }
@@ -126,22 +108,41 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAnyException(Exception e, HttpServletRequest request) {
         log.error("Unexpected error", e);
-        return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", request, null);
+        ErrorCode code = ErrorCode.INTERNAL_SERVER_ERROR;
+        return buildError(
+                code.status(),
+                code.defaultMessage(),
+                request,
+                code.name(),
+                null,
+                null
+        );
     }
 
     private ResponseEntity<ApiError> buildError(
             HttpStatus status,
             String message,
             HttpServletRequest request,
+            String code,
+            Map<String, Object> details,
             Map<String, String> fieldErrors
     ) {
+        Map<String, Object> mergedDetails = new LinkedHashMap<>();
+        if (details != null) {
+            mergedDetails = new LinkedHashMap<>(details);
+        }
+        if (fieldErrors != null && !fieldErrors.isEmpty()) {
+            mergedDetails.put("fieldErrors", fieldErrors);
+        }
+
         ApiError body = new ApiError(
-                LocalDateTime.now(),
+                Instant.now(),
                 status.value(),
                 status.getReasonPhrase(),
                 message,
                 request.getRequestURI(),
-                fieldErrors
+                code,
+                Map.copyOf(mergedDetails)
         );
         return ResponseEntity.status(status).body(body);
     }

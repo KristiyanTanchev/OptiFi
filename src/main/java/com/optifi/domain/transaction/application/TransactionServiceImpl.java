@@ -2,6 +2,8 @@ package com.optifi.domain.transaction.application;
 
 import com.optifi.domain.account.model.Account;
 import com.optifi.domain.account.repository.AccountRepository;
+import com.optifi.domain.category.model.Category;
+import com.optifi.domain.category.repository.CategoryRepository;
 import com.optifi.domain.transaction.application.command.*;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
 import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
@@ -23,6 +25,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -42,7 +45,9 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public TransactionDetailsResult createTransaction(TransactionCreateCommand cmd) {
         Account account = loadAccountAuthorized(cmd.accountId(), cmd.userId());
-        Transaction transaction = cmd.toEntity(account);
+        Category category = categoryRepository.findByIdAndUserId(cmd.categoryId(), cmd.userId())
+                .orElseThrow(() -> new EntityNotFoundException("category", cmd.categoryId()));
+        Transaction transaction = cmd.toEntity(account, category);
         Transaction savedTransaction = transactionRepository.save(transaction);
         return TransactionDetailsResult.fromEntity(savedTransaction);
     }
@@ -50,6 +55,9 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public void updateTransaction(TransactionUpdateCommand cmd) {
         Transaction transaction = loadTransactionAuthorized(cmd.userId(), cmd.accountId(), cmd.id());
+        Category category = categoryRepository.findByIdAndUserId(cmd.categoryId(), cmd.userId())
+                .orElseThrow(() -> new EntityNotFoundException("category", cmd.categoryId()));
+        transaction.setCategory(category);
         transaction.setAmount(cmd.amount());
         transaction.setDescription(cmd.description());
         transaction.setOccurredAt(cmd.occurredAt());

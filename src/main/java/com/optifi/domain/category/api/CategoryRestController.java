@@ -25,12 +25,13 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/categories")
+@PreAuthorize("isAuthenticated()")
 public class CategoryRestController {
 
     private final CategoryService categoryService;
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+
     public ResponseEntity<List<CategorySummaryResponseDto>> getUserOwnCategories(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
@@ -40,7 +41,6 @@ public class CategoryRestController {
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CategoryDetailsResponseDto> createCategory(
             @Valid @RequestBody CategoryCreateRequestDto dto,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -54,7 +54,6 @@ public class CategoryRestController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CategoryDetailsResponseDto> getCategoryById(
             @PathVariable @NotNull @Positive Long id,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -65,7 +64,6 @@ public class CategoryRestController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> updateCategory(
             @PathVariable @NotNull @Positive Long id,
             @Valid @RequestBody CategoryUpdateRequestDto dto,
@@ -77,7 +75,6 @@ public class CategoryRestController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteCategory(
             @PathVariable @NotNull @Positive Long id,
             @AuthenticationPrincipal CustomUserDetails userDetails

@@ -1,5 +1,6 @@
 package com.optifi.domain.transaction.api.response;
 
+import com.optifi.domain.category.api.response.CategorySummaryResponseDto;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ public record TransactionDetailsResponseDto(
         Instant occurredAt,
         BigDecimal amount,
         String description,
+        CategorySummaryResponseDto category,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -21,6 +23,7 @@ public record TransactionDetailsResponseDto(
                 result.occurredAt(),
                 result.amount(),
                 result.description(),
+                CategorySummaryResponseDto.fromResult(result.category()),
                 result.createdAt(),
                 result.updatedAt()
         );

@@ -1,5 +1,6 @@
 package com.optifi.domain.transaction.application.result;
 
+import com.optifi.domain.category.application.result.CategorySummaryResult;
 import com.optifi.domain.transaction.model.Transaction;
 
 import java.math.BigDecimal;
@@ -10,7 +11,8 @@ public record TransactionSummaryResult(
         long accountId,
         Instant occurredAt,
         BigDecimal amount,
-        String description
+        String description,
+        CategorySummaryResult categoryName
 ) {
     public static TransactionSummaryResult fromEntity(Transaction tx) {
         return new TransactionSummaryResult(
@@ -18,7 +20,8 @@ public record TransactionSummaryResult(
                 tx.getAccount().getId(),
                 tx.getOccurredAt(),
                 tx.getAmount(),
-                tx.getDescription()
+                tx.getDescription(),
+                CategorySummaryResult.fromEntity(tx.getCategory())
         );
     }
 }

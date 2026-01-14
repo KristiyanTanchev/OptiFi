@@ -30,7 +30,7 @@ public class AuthRestController {
                 registerRequestDto.email());
         LoginResult result = authService.register(cmd);
         LoginResponseDto response = LoginResponseDto.fromResult(result);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")

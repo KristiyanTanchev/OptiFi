@@ -11,6 +11,8 @@ import com.optifi.domain.user.api.response.UserDetailsResponseDto;
 import com.optifi.domain.user.api.request.UserPreferencesUpdateRequestDto;
 import com.optifi.domain.user.api.response.UserSummaryResponseDto;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,7 +39,7 @@ public class UserRestController {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR') or #id == authentication.principal.id")
     public ResponseEntity<UserDetailsResponseDto> getUser(
-            @PathVariable long id) {
+            @PathVariable @NotNull @Positive Long id) {
         UserDetailsResult userDetailsResult = userService.getUser(id);
         UserDetailsResponseDto userDetailsResponseDto = UserDetailsResponseDto.fromResult(userDetailsResult);
         return ResponseEntity.ok(userDetailsResponseDto);
@@ -46,7 +48,7 @@ public class UserRestController {
     @PutMapping("/{id}/promote-admin")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> promoteToAdmin(
-            @PathVariable Long id,
+            @PathVariable @NotNull @Positive Long id,
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
         ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(id, principal.getId(), RoleChangeAction.PROMOTE_TO_ADMIN);
@@ -57,7 +59,7 @@ public class UserRestController {
     @PutMapping("/{id}/promote-moderator")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> promoteToModerator(
-            @PathVariable Long id,
+            @PathVariable @NotNull @Positive Long id,
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
         ChangeUserRoleCommand cmd =
@@ -69,7 +71,7 @@ public class UserRestController {
     @PutMapping("/{id}/demote")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> demoteToUser(
-            @PathVariable Long id,
+            @PathVariable @NotNull @Positive Long id,
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
         ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(id, principal.getId(), RoleChangeAction.DEMOTE_TO_USER);
@@ -80,7 +82,7 @@ public class UserRestController {
     @PutMapping("/{id}/ban")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Void> banUser(
-            @PathVariable Long id,
+            @PathVariable @NotNull @Positive Long id,
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
         BanUserCommand cmd = new BanUserCommand(id, principal.getId());
@@ -91,7 +93,7 @@ public class UserRestController {
     @PutMapping("/{id}/unban")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Void> unbanUser(
-            @PathVariable Long id,
+            @PathVariable @NotNull @Positive Long id,
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
         UnbanUserCommand cmd = new UnbanUserCommand(id, principal.getId());
@@ -102,7 +104,7 @@ public class UserRestController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Void> deleteUser(
-            @PathVariable Long id,
+            @PathVariable @NotNull @Positive Long id,
             @AuthenticationPrincipal CustomUserDetails principal) {
         userService.deleteUser(id, principal.getId());
         return ResponseEntity.noContent().build();
@@ -152,6 +154,7 @@ public class UserRestController {
     }
 
     @DeleteMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteUser(
             @AuthenticationPrincipal CustomUserDetails principal) {
         userService.deleteUser(principal.getId(), principal.getId());

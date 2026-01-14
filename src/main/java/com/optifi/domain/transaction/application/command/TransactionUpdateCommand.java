@@ -9,6 +9,7 @@ public record TransactionUpdateCommand(
         Long id,
         BigDecimal amount,
         String description,
-        Instant occurredAt
+        Instant occurredAt,
+        Long categoryId
 ) {
 }

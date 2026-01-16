@@ -2,11 +2,16 @@ import {
     Alert,
     Box,
     Button,
+    Pagination,
     CircularProgress,
     Container,
     Stack,
     Typography,
 } from "@mui/material";
+import { useTransactions, useDeleteTransaction } from "../hooks/useTransactions";
+import TransactionsTable from "../components/TransactionsTable";
+import TransactionFiltersForm from "../components/TransactionFilters";
+import CreateTransactionDialog from "../components/CreateTransactionDialog";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -28,6 +33,13 @@ export default function AccountDetailsPage() {
     const del = useDeleteAccount();
 
     const [editOpen, setEditOpen] = useState(false);
+
+    const [page, setPage] = useState(0);
+    const [filters, setFilters] = useState({});
+    const [createOpen, setCreateOpen] = useState(false);
+
+    const tx = useTransactions(accountId, filters, page);
+    const delTx = useDeleteTransaction(accountId);
 
     async function onDelete() {
         if (!data) return;
@@ -96,21 +108,36 @@ export default function AccountDetailsPage() {
                 {error && <Alert severity="error">Failed to load account</Alert>}
 
                 {data && (
-                    <Stack spacing={1}>
-                        <Typography><b>Institution:</b> {data.institution ?? "-"}</Typography>
-                        <Typography><b>Status:</b> {data.archived ? "Archived" : "Active"}</Typography>
-                        <Typography><b>Created:</b> {new Date(data.createdAt).toLocaleString()}</Typography>
-                        {data.updatedAt && (
-                            <Typography><b>Updated:</b> {new Date(data.updatedAt).toLocaleString()}</Typography>
+                    <Stack spacing={2} sx={{ mt: 3 }}>
+                        <Stack direction="row" justifyContent="space-between">
+                            <Typography variant="h6">Transactions</Typography>
+                            <Button variant="contained" onClick={() => setCreateOpen(true)}>
+                                New
+                            </Button>
+                        </Stack>
+
+                        <TransactionFiltersForm value={filters} onChange={setFilters} />
+
+                        {tx.data && (
+                            <>
+                                <TransactionsTable
+                                    transactions={tx.data.content}
+                                    onDelete={(id: number) => delTx.mutate(id)}
+                                />
+
+                                <Pagination
+                                    page={tx.data.number + 1}
+                                    count={tx.data.totalPages}
+                                    onChange={(_, p) => setPage(p - 1)}
+                                />
+                            </>
                         )}
 
-                        {/* We’ll do transactions UI next */}
-                        <Box sx={{ mt: 2 }}>
-                            <Typography variant="h6">Transactions</Typography>
-                            <Typography color="text.secondary">
-                                Next step: table + filters + pagination
-                            </Typography>
-                        </Box>
+                        <CreateTransactionDialog
+                            accountId={accountId}
+                            open={createOpen}
+                            onClose={() => setCreateOpen(false)}
+                        />
                     </Stack>
                 )}
 

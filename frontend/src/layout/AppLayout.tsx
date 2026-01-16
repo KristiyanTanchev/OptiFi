@@ -58,6 +58,9 @@ export default function AppLayout() {
                     <ListItemButton onClick={() => nav("/accounts")}>
                         <ListItemText primary="Accounts" />
                     </ListItemButton>
+                    <ListItemButton onClick={() => nav("/categories")}>
+                        <ListItemText primary="Categories" />
+                    </ListItemButton>
                 </List>
             </Drawer>
 

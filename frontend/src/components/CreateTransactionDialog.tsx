@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { useCreateTransaction } from "../hooks/useTransactions";
 import { useCategories } from "../hooks/useCategories";
+import { useNotify } from "../ui/notify";
 
 type Props = {
     accountId: number;
@@ -20,6 +21,8 @@ type Props = {
 
 export default function CreateTransactionDialog({ accountId, open, onClose }: Props) {
     const create = useCreateTransaction(accountId);
+
+    const notify = useNotify();
 
     const [amount, setAmount] = useState("");
     const [date, setDate] = useState("");
@@ -33,6 +36,7 @@ export default function CreateTransactionDialog({ accountId, open, onClose }: Pr
             occurredAt: new Date(date).toISOString(),
             categoryId: Number(categoryId),
         });
+        notify("Transaction created", "success");
         onClose();
     }
 

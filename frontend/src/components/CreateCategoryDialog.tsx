@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useCreateCategory } from "../hooks/useCategories";
+import {useNotify} from "../ui/notify.tsx";
 
 type Props = {
     open: boolean;
@@ -21,9 +22,11 @@ export default function CreateCategoryDialog({ open, onClose }: Props) {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [icon, setIcon] = useState("");
+    const notify = useNotify();
 
     async function onSubmit() {
         await create.mutateAsync({ name, description, icon });
+        notify("Category created", "success");
         onClose();
         setName("");
         setDescription("");

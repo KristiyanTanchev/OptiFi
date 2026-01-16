@@ -21,6 +21,7 @@ import {
     useUnarchiveAccount,
 } from "../hooks/useAccounts";
 import EditAccountDialog from "../components/EditAccountDialog";
+import EditTransactionDialog from "../components/EditTransactionDialog.tsx";
 
 export default function AccountDetailsPage() {
     const { id } = useParams();
@@ -37,6 +38,7 @@ export default function AccountDetailsPage() {
     const [page, setPage] = useState(0);
     const [filters, setFilters] = useState({});
     const [createOpen, setCreateOpen] = useState(false);
+    const [editTxId, setEditTxId] = useState<number | null>(null);
 
     const tx = useTransactions(accountId, filters, page);
     const delTx = useDeleteTransaction(accountId);
@@ -122,7 +124,18 @@ export default function AccountDetailsPage() {
                             <>
                                 <TransactionsTable
                                     transactions={tx.data.content}
-                                    onDelete={(id: number) => delTx.mutate(id)}
+                                    onDelete={(id) => delTx.mutate(id)}
+                                    onOpen={(id) => {
+                                        setEditTxId(id);
+                                        setEditOpen(true);
+                                    }}
+                                />
+
+                                <EditTransactionDialog
+                                    accountId={accountId}
+                                    transactionId={editTxId}
+                                    open={editOpen}
+                                    onClose={() => setEditOpen(false)}
                                 />
 
                                 <Pagination

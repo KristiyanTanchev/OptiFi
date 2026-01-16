@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useCreateAccount } from "../hooks/useAccounts";
+import {useNotify} from "../ui/notify.tsx";
 
 type Props = {
     open: boolean;
@@ -26,6 +27,7 @@ export default function CreateAccountDialog({ open, onClose }: Props) {
     const [type, setType] = useState("");
     const [currency, setCurrency] = useState("");
     const [institution, setInstitution] = useState("");
+    const notify = useNotify();
 
     function reset() {
         setName("");
@@ -48,6 +50,7 @@ export default function CreateAccountDialog({ open, onClose }: Props) {
             currency,
             institution: institution || undefined,
         });
+        notify("Account created", "success");
         handleClose();
     }
 

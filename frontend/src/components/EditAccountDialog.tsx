@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import type { AccountDetails } from "../types/account";
 import { useUpdateAccount } from "../hooks/useAccounts";
+import {useNotify} from "../ui/notify.tsx";
 
 type Props = {
     open: boolean;
@@ -18,7 +19,7 @@ type Props = {
     account: AccountDetails;
 };
 
-const ACCOUNT_TYPES = ["CASH", "BANK", "CARD"];
+const ACCOUNT_TYPES = ["CASH", "BANK"];
 const CURRENCIES = ["EUR", "USD"];
 
 export default function EditAccountDialog({ open, onClose, account }: Props) {
@@ -28,6 +29,7 @@ export default function EditAccountDialog({ open, onClose, account }: Props) {
     const [type, setType] = useState(account.type);
     const [currency, setCurrency] = useState(account.currency);
     const [institution, setInstitution] = useState(account.institution ?? "");
+    const notify = useNotify();
 
     useEffect(() => {
         if (!open) return;
@@ -44,6 +46,7 @@ export default function EditAccountDialog({ open, onClose, account }: Props) {
             currency,
             institution: institution || undefined,
         });
+        notify("Account updated", "success");
         onClose();
     }
 

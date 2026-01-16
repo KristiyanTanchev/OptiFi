@@ -1,0 +1,12 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Gradle caches
+.gradle/
+**/.gradle/
+
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local

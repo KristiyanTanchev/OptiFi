@@ -1,5 +1,6 @@
 package com.optifi.domain.auth.api;
 
+import com.optifi.config.FeatureProperties;
 import com.optifi.domain.auth.api.request.LoginRequestDto;
 import com.optifi.domain.auth.api.response.LoginResponseDto;
 import com.optifi.domain.auth.api.request.RegisterRequestDto;
@@ -7,6 +8,7 @@ import com.optifi.domain.auth.application.AuthService;
 import com.optifi.domain.auth.application.command.LoginCommand;
 import com.optifi.domain.auth.application.command.RegisterUserCommand;
 import com.optifi.domain.auth.application.result.LoginResult;
+import com.optifi.exceptions.AuthorizationException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthRestController {
     private final AuthService authService;
+    private final FeatureProperties features;
 
     @PostMapping("/register")
     public ResponseEntity<LoginResponseDto> register(@Valid @RequestBody RegisterRequestDto registerRequestDto) {
+        if (!features.registrationEnabled()) {
+            throw new AuthorizationException("Registration is disabled on this deployment.");
+        }
         RegisterUserCommand cmd = new RegisterUserCommand(
                 registerRequestDto.username(),
                 registerRequestDto.password(),

@@ -1,8 +1,19 @@
-import { useState } from "react";
-import {useNavigate} from "react-router-dom";
-import { Alert, Box, Button, Container, Paper, Stack, TextField, Typography } from "@mui/material";
+import {useEffect, useState} from "react";
+import { useNavigate } from "react-router-dom";
+import {
+    Alert,
+    Box,
+    Button,
+    Container,
+    Paper,
+    Stack,
+    TextField,
+    Typography,
+    Link,
+} from "@mui/material";
 import { login } from "../auth/authApi";
 import { saveSession } from "../auth/session";
+
 
 export default function LoginPage() {
     const nav = useNavigate();
@@ -12,6 +23,21 @@ export default function LoginPage() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [registrationEnabled, setRegistrationEnabled] = useState(false);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/features`);
+                if (!res.ok) return;
+                const data = await res.json();
+                setRegistrationEnabled(Boolean(data?.registrationEnabled));
+            } catch {
+                setRegistrationEnabled(false);
+            }
+        })();
+    }, []);
 
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -59,12 +85,27 @@ export default function LoginPage() {
                                     required
                                     fullWidth
                                 />
+
                                 <Button type="submit" variant="contained" disabled={loading}>
                                     {loading ? "Signing in..." : "Sign in"}
                                 </Button>
-                                <Button variant="outlined" onClick={() => nav("/register")}>
-                                    Register
-                                </Button>
+
+                                {registrationEnabled ? (
+                                    <Button variant="outlined" onClick={() => nav("/register")}>
+                                        Register
+                                    </Button>
+                                ) : (
+                                    <Box sx={{ textAlign: "center", mt: 1 }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Invitation-only demo. Contact the developer at{" "}
+                                            <Link href="mailto:dev@kvtmail.com?subject=OptiFI%20Demo%20Access" underline="hover">
+                                                dev@kvtmail.com
+                                            </Link>
+                                            .
+                                        </Typography>
+                                    </Box>
+                                )}
+
                             </Stack>
                         </Box>
                     </Stack>

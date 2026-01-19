@@ -1,7 +1,7 @@
 import axios from "axios";
 import { clearSession } from "../auth/session";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL;
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 export const http = axios.create({ baseURL });
 

@@ -30,7 +30,7 @@ public class Category {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100, unique = true)
     private String name;
 
     @Column(name = "description", nullable = false)
@@ -39,8 +39,8 @@ public class Category {
     @Column(name = "icon", nullable = false)
     private String icon;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
 
     @Builder.Default
@@ -54,4 +54,8 @@ public class Category {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    public boolean isDefault() {
+        return user == null;
+    }
 }

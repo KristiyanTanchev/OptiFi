@@ -13,7 +13,9 @@ public record CategoryDetailsResponseDto(
         String icon,
         List<TransactionSummaryResponseDto> transactions,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        boolean canEdit,
+        boolean canDelete
 ) {
     public static CategoryDetailsResponseDto fromResult(CategoryDetailsResult result) {
         return new CategoryDetailsResponseDto(
@@ -26,7 +28,9 @@ public record CategoryDetailsResponseDto(
                         map(TransactionSummaryResponseDto::fromResult).
                         toList(),
                 result.createdAt(),
-                result.updatedAt()
+                result.updatedAt(),
+                result.canEdit(),
+                result.canDelete()
         );
     }
 }

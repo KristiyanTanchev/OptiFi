@@ -4,6 +4,8 @@ export type CategorySummary = {
     id: number;
     name: string;
     icon: string;
+    canEdit: boolean;
+    canDelete: boolean;
 };
 
 export type CategoryDetails = CategorySummary & {

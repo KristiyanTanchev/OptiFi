@@ -13,7 +13,9 @@ public record CategoryDetailsResult(
         String icon,
         List<TransactionSummaryResult> transactions,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        boolean canEdit,
+        boolean canDelete
 ) {
     public static CategoryDetailsResult fromEntity(Category category) {
         return new CategoryDetailsResult(
@@ -26,7 +28,9 @@ public record CategoryDetailsResult(
                         .map(TransactionSummaryResult::fromEntity)
                         .toList(),
                 category.getCreatedAt(),
-                category.getUpdatedAt()
+                category.getUpdatedAt(),
+                !category.isDefault(),
+                !category.isDefault()
         );
     }
 }

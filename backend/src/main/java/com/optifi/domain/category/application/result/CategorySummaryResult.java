@@ -9,7 +9,9 @@ public record CategorySummaryResult(
         String name,
         String icon,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        boolean canEdit,
+        boolean canDelete
 ) {
     public static CategorySummaryResult fromEntity(Category category) {
         return new CategorySummaryResult(
@@ -17,7 +19,9 @@ public record CategorySummaryResult(
                 category.getName(),
                 category.getIcon(),
                 category.getCreatedAt(),
-                category.getUpdatedAt()
+                category.getUpdatedAt(),
+                !category.isDefault(),
+                !category.isDefault()
         );
     }
 }

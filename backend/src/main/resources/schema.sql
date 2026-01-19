@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS accounts
     institution varchar(100)          null,
     created_at  datetime(6)           not null,
     updated_at  datetime(6)           null,
-    archived    bit                   not null,
+    archived    bit                   null,
     constraint uk_accounts_user_name unique (user_id, name),
     constraint accounts_users_id_fk
         foreign key (user_id) references users (id)
@@ -37,19 +37,22 @@ CREATE TABLE IF NOT EXISTS accounts
 
 CREATE TABLE IF NOT EXISTS categories
 (
-    id          bigint auto_increment
-        primary key,
-    name        varchar(100) not null,
-    description varchar(255) null,
-    icon        varchar(255) null,
-    created_at  datetime(6)  not null,
-    updated_at  datetime(6)  null,
-    user_id     bigint       not null,
-    constraint uk_categories_user_name unique (user_id, name),
-    constraint categories_users_id_fk
-        foreign key (user_id) references users (id)
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    description VARCHAR(255) NULL,
+    icon        VARCHAR(255) NULL,
+    created_at  DATETIME(6)  NOT NULL,
+    updated_at  DATETIME(6)  NULL,
+    user_id     BIGINT       NULL,
+    -- Option A: enforce unique global names + unique per-user names
+    -- (collapses NULL user_id into -1 for uniqueness checks)
+    user_key    BIGINT GENERATED ALWAYS AS (COALESCE(user_id, -1)) STORED,
 
+    CONSTRAINT uk_categories_userkey_name UNIQUE (user_key, name),
+    CONSTRAINT categories_users_id_fk
+        FOREIGN KEY (user_id) REFERENCES users (id)
 );
+
 
 CREATE TABLE IF NOT EXISTS transactions
 (

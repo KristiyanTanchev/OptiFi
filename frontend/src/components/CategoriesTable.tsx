@@ -32,19 +32,23 @@ export default function CategoriesTable({ categories }: Props) {
                             <TableCell>{c.name}</TableCell>
                             <TableCell align="right">
                                 <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                    <IconButton size="small" onClick={() => setEdit(c)}>
-                                        <EditIcon fontSize="small" />
-                                    </IconButton>
+                                    {c.canEdit && (
+                                        <IconButton size="small" onClick={() => setEdit(c)}>
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
 
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => {
-                                            const ok = window.confirm(`Delete category "${c.name}"?`);
-                                            if (ok) del.mutate(c.id);
-                                        }}
-                                    >
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
+                                    {c.canDelete && (
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => {
+                                                const ok = window.confirm(`Delete category "${c.name}"?`);
+                                                if (ok) del.mutate(c.id);
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
                                 </Stack>
                             </TableCell>
                         </TableRow>

@@ -85,10 +85,17 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(categoryId).orElseThrow(
                 () -> new EntityNotFoundException("Category", categoryId)
         );
-        if (!category.getUser().getId().equals(userId) &&
-                user.getRole() != Role.ADMIN &&
-                user.getRole() != Role.MODERATOR) {
-            throw new AuthorizationException("You are not authorized to modify this category");
+        if (category.isDefault()){
+            if (user.getRole() != Role.ADMIN) {
+                throw new AuthorizationException("You cannot modify default category");
+            }
+        }
+        if (!category.isDefault()){
+            if (!category.getUser().getId().equals(userId) &&
+                    user.getRole() != Role.ADMIN &&
+                    user.getRole() != Role.MODERATOR) {
+                throw new AuthorizationException("You are not authorized to modify this category");
+            }
         }
         return category;
     }

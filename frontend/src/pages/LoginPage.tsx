@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Alert,
@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { login } from "../auth/authApi";
 import { saveSession } from "../auth/session";
+import {useFeatures} from "../hooks/useFeatures.ts";
 
 
 export default function LoginPage() {
@@ -24,20 +25,10 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const [registrationEnabled, setRegistrationEnabled] = useState(false);
+    const { data: features} = useFeatures();
 
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/features`);
-                if (!res.ok) return;
-                const data = await res.json();
-                setRegistrationEnabled(Boolean(data?.registrationEnabled));
-            } catch {
-                setRegistrationEnabled(false);
-            }
-        })();
-    }, []);
+    const registrationEnabled = !!features?.registrationEnabled;
+
 
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();

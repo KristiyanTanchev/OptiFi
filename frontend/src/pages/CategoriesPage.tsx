@@ -10,12 +10,19 @@ import {useEffect, useState} from "react";
 import { useCategories } from "../hooks/useCategories";
 import CategoriesTable from "../components/CategoriesTable";
 import CreateCategoryDialog from "../components/CreateCategoryDialog";
+import { useFeatures } from "../hooks/useFeatures";
+
+
+
 
 export default function CategoriesPage() {
     const { data, isLoading, error } = useCategories();
     const [open, setOpen] = useState(false);
 
-    const [createCategoryEnabled, setCreateCategoryEnabled] = useState(false);
+    const [, setCreateCategoryEnabled] = useState(false);
+    const { data: features} = useFeatures();
+    const canCreateCategories = !!features?.createCategoryEnabled;
+
 
     useEffect(() => {
         (async () => {
@@ -25,7 +32,7 @@ export default function CategoriesPage() {
                 console.log("features status:", res.status, "body:", res.text());
                 const flags = await res.json();
                 console.log("features:", flags);
-                setCreateCategoryEnabled(Boolean(flags?.allowUserCategories));
+                setCreateCategoryEnabled(Boolean(flags?.createCategoryEnabled));
             } catch {
                 setCreateCategoryEnabled(false);
             }
@@ -35,7 +42,7 @@ export default function CategoriesPage() {
     return (
         <Container sx={{ py: 4 }}>
             <Stack spacing={3}>
-                {createCategoryEnabled ? (
+                {canCreateCategories ? (
                     <Box display="flex" justifyContent="space-between">
                         <Typography variant="h4">Categories</Typography>
                         <Button variant="contained" onClick={() => setOpen(true)}>

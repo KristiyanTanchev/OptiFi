@@ -4,5 +4,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "optifi.features")
 public record FeatureProperties(
-        boolean registrationEnabled
+        boolean registrationEnabled,
+        boolean allowUserCategories
 ) {}

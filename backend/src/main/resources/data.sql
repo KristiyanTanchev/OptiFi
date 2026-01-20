@@ -53,13 +53,19 @@ FROM users u WHERE u.username = 'maria';
 -- ------------------------------------------------------------
 -- DEFAULT CATEGORIES (global: user_id IS NULL)
 -- ------------------------------------------------------------
+
 INSERT IGNORE INTO categories (name, description, icon, created_at, updated_at, user_id)
 VALUES
-    ('Income',        'Salary and other income',        'income',        NOW(6), NOW(6), NULL),
-    ('Groceries',     'Food and household items',       'groceries',     NOW(6), NOW(6), NULL),
-    ('Subscriptions', 'Recurring subscriptions',        'subscriptions', NOW(6), NOW(6), NULL),
-    ('Bills',         'Rent, utilities, services',      'bills',         NOW(6), NOW(6), NULL),
-    ('Eating Out',    'Restaurants, coffee, takeout',   'eating_out',    NOW(6), NOW(6), NULL);
+    ('Food & drinks',           'Groceries, restaurants, coffee, takeout', 'restaurant',     NOW(6), NOW(6), NULL),
+    ('Shopping',                'Clothes, gadgets, household shopping',     'shopping_cart',  NOW(6), NOW(6), NULL),
+    ('Housing',                 'Rent, utilities, home services',           'home',           NOW(6), NOW(6), NULL),
+    ('Transportation',          'Public transport, taxi, commute',          'directions_bus', NOW(6), NOW(6), NULL),
+    ('Vehicle',                 'Fuel, maintenance, repairs, car costs',    'directions_car', NOW(6), NOW(6), NULL),
+    ('Life & Entertainment',    'Movies, fun, hobbies, events',             'movie',          NOW(6), NOW(6), NULL),
+    ('Communication, PC',       'Internet, phone, software, devices',       'computer',       NOW(6), NOW(6), NULL),
+    ('Financial expenses',      'Fees, charges, subscriptions, interest',   'receipt_long',   NOW(6), NOW(6), NULL),
+    ('Investments',             'Stocks, ETFs, crypto, investing',          'trending_up',    NOW(6), NOW(6), NULL),
+    ('Income',                  'Salary and other income',                  'attach_money',   NOW(6), NOW(6), NULL);
 
 -- ------------------------------------------------------------
 -- TRANSACTIONS (re-runnable: delete only [seed] ones)

@@ -16,7 +16,10 @@ public class FeatureRestController {
 
     @GetMapping
     public ResponseEntity<FeatureFlagsResponseDto> getFeatures() {
-        FeatureFlagsResponseDto response = new FeatureFlagsResponseDto(features.registrationEnabled());
+        FeatureFlagsResponseDto response = new FeatureFlagsResponseDto(
+                features.registrationEnabled(),
+                features.allowUserCategories()
+        );
         return ResponseEntity.ok(response);
     }
 }

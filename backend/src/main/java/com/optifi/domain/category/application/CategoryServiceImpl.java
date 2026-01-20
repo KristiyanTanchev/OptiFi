@@ -1,5 +1,6 @@
 package com.optifi.domain.category.application;
 
+import com.optifi.config.FeatureProperties;
 import com.optifi.domain.category.application.command.CategoryCreateCommand;
 import com.optifi.domain.category.application.command.CategoryUpdateCommand;
 import com.optifi.domain.category.application.result.CategoryDetailsResult;
@@ -25,6 +26,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final FeatureProperties featureProperties;
 
     @Override
     public List<CategorySummaryResult> getUsersCategories(long userId) {
@@ -37,6 +39,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDetailsResult createCategory(CategoryCreateCommand cmd) {
+        if (!featureProperties.allowUserCategories()){
+            throw new AuthorizationException("Category creation is disabled");
+        }
         User creator = userRepository.findById(cmd.userId()).orElseThrow(
                 () -> new EntityNotFoundException("User", cmd.userId())
         );

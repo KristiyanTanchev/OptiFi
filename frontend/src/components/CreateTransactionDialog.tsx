@@ -7,11 +7,14 @@ import {
     Stack,
     TextField,
     MenuItem,
+    ListItemIcon,
+    ListItemText,
 } from "@mui/material";
 import { useState } from "react";
 import { useCreateTransaction } from "../hooks/useTransactions";
 import { useCategories } from "../hooks/useCategories";
 import { useNotify } from "../ui/notify";
+import { getCategoryVisual } from "../categories/categoryVisuals"; // <-- adjust path
 
 type Props = {
     accountId: number;
@@ -21,7 +24,6 @@ type Props = {
 
 export default function CreateTransactionDialog({ accountId, open, onClose }: Props) {
     const create = useCreateTransaction(accountId);
-
     const notify = useNotify();
 
     const [amount, setAmount] = useState("");
@@ -51,6 +53,7 @@ export default function CreateTransactionDialog({ accountId, open, onClose }: Pr
                         onChange={(e) => setAmount(e.target.value)}
                         required
                     />
+
                     <TextField
                         label="Date"
                         type="date"
@@ -59,6 +62,7 @@ export default function CreateTransactionDialog({ accountId, open, onClose }: Pr
                         onChange={(e) => setDate(e.target.value)}
                         required
                     />
+
                     <TextField
                         select
                         label="Category"
@@ -66,13 +70,19 @@ export default function CreateTransactionDialog({ accountId, open, onClose }: Pr
                         onChange={(e) => setCategoryId(e.target.value)}
                         required
                     >
-                        {categories?.map((c) => (
-                            <MenuItem key={c.id} value={c.id}>
-                                {c.icon} {c.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
+                        {categories?.map((c) => {
+                            const v = getCategoryVisual(c.icon);
 
+                            return (
+                                <MenuItem key={c.id} value={c.id}>
+                                    <ListItemIcon sx={{ minWidth: 32, color: v.color }}>
+                                        {v.icon}
+                                    </ListItemIcon>
+                                    <ListItemText primary={c.name} />
+                                </MenuItem>
+                            );
+                        })}
+                    </TextField>
                 </Stack>
             </DialogContent>
 

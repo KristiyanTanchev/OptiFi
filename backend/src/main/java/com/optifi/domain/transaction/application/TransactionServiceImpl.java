@@ -6,6 +6,7 @@ import com.optifi.domain.category.model.Category;
 import com.optifi.domain.category.repository.CategoryRepository;
 import com.optifi.domain.transaction.application.command.*;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
+import com.optifi.domain.transaction.application.result.TransactionGetSummaryResult;
 import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
 import com.optifi.domain.transaction.model.Transaction;
 import com.optifi.domain.transaction.repository.TransactionRepository;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Service
 @Transactional
@@ -69,6 +72,36 @@ public class TransactionServiceImpl implements TransactionService {
         transactionRepository.delete(transaction);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public TransactionGetSummaryResult getTransactionSummary(TransactionGetSummaryCommand cmd) {
+        Account account = loadAccountAuthorized(cmd.accountId(), cmd.userId());
+
+        var p = transactionRepository.getAccountTransactionSummary(
+                cmd.userId(),
+                cmd.accountId(),
+                cmd.from(),
+                cmd.to(),
+                cmd.categoryId(),
+                normalizeQuery(cmd.query())
+        );
+
+        BigDecimal income = p.getIncome();
+        BigDecimal expense = p.getExpense();
+        BigDecimal net = income.subtract(expense);
+
+        return new TransactionGetSummaryResult(
+                cmd.accountId(),
+                account.getCurrency().name(),
+                cmd.from(),
+                cmd.to(),
+                income,
+                expense,
+                net,
+                p.getCount()
+        );
+    }
+
     private Account loadAccountAuthorized(Long accountId, Long userId) {
         Account account = accountRepository.findById(accountId).orElseThrow(
                 () -> new EntityNotFoundException("Account", accountId)
@@ -76,7 +109,7 @@ public class TransactionServiceImpl implements TransactionService {
         if (userId.equals(account.getUser().getId())) {
             return account;
         }
-        throw new AuthorizationException("You are not authorized to modify this account");
+        throw new AuthorizationException("You are not authorized to access this account");
     }
 
     private Transaction loadTransactionAuthorized(Long userId, Long accountId, Long id) {
@@ -90,5 +123,16 @@ public class TransactionServiceImpl implements TransactionService {
             throw new EntityNotFoundException("Transaction", id);
         }
         return transaction;
+    }
+
+    private String normalizeQuery(String q) {
+        if (q == null) {
+            return null;
+        }
+        q = q.trim();
+        if (q.isEmpty()) {
+            return null;
+        }
+        return q;
     }
 }

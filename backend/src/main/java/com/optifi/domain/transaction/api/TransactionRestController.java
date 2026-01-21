@@ -3,14 +3,14 @@ package com.optifi.domain.transaction.api;
 import com.optifi.domain.transaction.api.request.GetUserTransactionsRequestDto;
 import com.optifi.domain.transaction.api.request.TransactionCreateRequestDto;
 import com.optifi.domain.transaction.api.request.TransactionUpdateRequestDto;
+import com.optifi.domain.transaction.api.request.TransactionGetSummaryRequestDto;
 import com.optifi.domain.transaction.api.response.TransactionDetailsResponseDto;
 import com.optifi.domain.transaction.api.response.TransactionSummaryResponseDto;
+import com.optifi.domain.transaction.api.response.TransactionGetSummaryResponseDto;
 import com.optifi.domain.transaction.application.TransactionService;
-import com.optifi.domain.transaction.application.command.TransactionCreateCommand;
-import com.optifi.domain.transaction.application.command.TransactionQuery;
-import com.optifi.domain.transaction.application.command.TransactionReferenceCommand;
-import com.optifi.domain.transaction.application.command.TransactionUpdateCommand;
+import com.optifi.domain.transaction.application.command.*;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
+import com.optifi.domain.transaction.application.result.TransactionGetSummaryResult;
 import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
 import com.optifi.security.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -98,5 +98,17 @@ public class TransactionRestController {
         TransactionReferenceCommand cmd = new TransactionReferenceCommand(userDetails.getId(), accountId, transactionId);
         transactionService.deleteTransaction(cmd);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<TransactionGetSummaryResponseDto> getTransactionsSummary(
+            @PathVariable @NotNull @Positive Long accountId,
+            @Valid @ModelAttribute TransactionGetSummaryRequestDto dto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        TransactionGetSummaryCommand cmd = dto.toCommand(userDetails.getId(), accountId);
+        TransactionGetSummaryResult result = transactionService.getTransactionSummary(cmd);
+        TransactionGetSummaryResponseDto response = TransactionGetSummaryResponseDto.from(result);
+        return ResponseEntity.ok(response);
     }
 }

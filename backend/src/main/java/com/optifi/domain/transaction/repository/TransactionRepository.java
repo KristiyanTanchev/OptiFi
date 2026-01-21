@@ -35,7 +35,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
 
     @Query("""
                 select
-                  :currency as currency,
                   coalesce(sum(case when t.amount > 0 then t.amount else 0 end), 0) as income,
                   coalesce(sum(case when t.amount < 0 then -t.amount else 0 end), 0) as expense,
                   count(t.id) as count

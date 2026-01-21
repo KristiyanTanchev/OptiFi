@@ -19,7 +19,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 
 @Service
 @Transactional
@@ -85,20 +84,10 @@ public class TransactionServiceImpl implements TransactionService {
                 cmd.categoryId(),
                 normalizeQuery(cmd.query())
         );
-
-        BigDecimal income = p.getIncome();
-        BigDecimal expense = p.getExpense();
-        BigDecimal net = income.subtract(expense);
-
-        return new TransactionGetSummaryResult(
-                cmd.accountId(),
-                account.getCurrency().name(),
-                cmd.from(),
-                cmd.to(),
-                income,
-                expense,
-                net,
-                p.getCount()
+        return TransactionGetSummaryResult.from(
+                account.getCurrency(),
+                cmd,
+                p
         );
     }
 

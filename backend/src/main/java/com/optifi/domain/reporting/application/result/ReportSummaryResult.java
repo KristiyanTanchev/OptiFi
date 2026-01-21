@@ -1,5 +1,6 @@
 package com.optifi.domain.reporting.application.result;
 
+import com.optifi.domain.shared.model.Currency;
 import com.optifi.domain.transaction.repository.ReportSummaryByAccountProjection;
 import com.optifi.domain.transaction.repository.ReportSummaryProjection;
 
@@ -16,15 +17,16 @@ public record ReportSummaryResult(
 ) {
 
     public static ReportSummaryResult from(
+            Currency currency,
             ReportSummaryProjection projection,
             List<ReportSummaryByAccountProjection> byAccount
     ) {
         return new ReportSummaryResult(
-                projection.currency().name(),
-                projection.income(),
-                projection.expense(),
-                projection.income().subtract(projection.expense()),
-                projection.count(),
+                currency.name(),
+                projection.getIncome(),
+                projection.getExpense(),
+                projection.getIncome().subtract(projection.getExpense()),
+                projection.getCount(),
                 byAccount.stream().map(ReportSummaryByAccountResult::from).toList()
         );
     }

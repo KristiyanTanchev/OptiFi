@@ -33,6 +33,6 @@ public class ReportServiceImpl implements ReportService {
                 cmd.to(),
                 cmd.currency()
         );
-        return ReportSummaryResult.from(summaryProjection, byAccount);
+        return ReportSummaryResult.from(cmd.currency(), summaryProjection, byAccount);
     }
 }

@@ -17,12 +17,12 @@ public record ReportSummaryByAccountResult(
             ReportSummaryByAccountProjection projection
     ) {
         return new ReportSummaryByAccountResult(
-                projection.accountId(),
-                projection.accountName(),
-                projection.income(),
-                projection.expense(),
-                projection.income().subtract(projection.expense()),
-                projection.count()
+                projection.getAccountId(),
+                projection.getAccountName(),
+                projection.getIncome(),
+                projection.getExpense(),
+                projection.getIncome().subtract(projection.getExpense()),
+                projection.getCount()
         );
     }
 }

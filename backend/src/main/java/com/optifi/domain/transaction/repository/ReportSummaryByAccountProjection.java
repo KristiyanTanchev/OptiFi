@@ -4,13 +4,13 @@ package com.optifi.domain.transaction.repository;
 import java.math.BigDecimal;
 
 public interface ReportSummaryByAccountProjection {
-    Long accountId();
+    Long getAccountId();
 
-    String accountName();
+    String getAccountName();
 
-    BigDecimal income();
+    BigDecimal getIncome();
 
-    BigDecimal expense();
+    BigDecimal getExpense();
 
-    Long count();
+    Long getCount();
 }

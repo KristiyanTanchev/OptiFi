@@ -9,8 +9,8 @@ import {
     Toolbar,
     Typography,
 } from "@mui/material";
-import { Outlet, useNavigate } from "react-router-dom";
-import { clearSession, getUser } from "../auth/session";
+import {Outlet, useNavigate} from "react-router-dom";
+import {clearSession, getUser} from "../auth/session";
 
 const drawerWidth = 220;
 
@@ -20,17 +20,17 @@ export default function AppLayout() {
 
     function logout() {
         clearSession();
-        nav("/login", { replace: true });
+        nav("/login", {replace: true});
     }
 
     return (
-        <Box sx={{ display: "flex" }}>
+        <Box sx={{display: "flex"}}>
             {/* Top bar */}
             <AppBar
                 position="fixed"
-                sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                sx={{zIndex: (theme) => theme.zIndex.drawer + 1}}
             >
-                <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Toolbar sx={{display: "flex", justifyContent: "space-between"}}>
                     <Typography variant="h6">OptiFI</Typography>
 
                     <Box display="flex" alignItems="center" gap={2}>
@@ -50,24 +50,27 @@ export default function AppLayout() {
                 sx={{
                     width: drawerWidth,
                     flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: "border-box" },
+                    [`& .MuiDrawer-paper`]: {width: drawerWidth, boxSizing: "border-box"},
                 }}
             >
-                <Toolbar />
+                <Toolbar/>
                 <List>
                     <ListItemButton onClick={() => nav("/accounts")}>
-                        <ListItemText primary="Accounts" />
+                        <ListItemText primary="Accounts"/>
                     </ListItemButton>
                     <ListItemButton onClick={() => nav("/categories")}>
-                        <ListItemText primary="Categories" />
+                        <ListItemText primary="Categories"/>
+                    </ListItemButton>
+                    <ListItemButton onClick={() => nav("/reports")}>
+                        <ListItemText primary="Reports"/>
                     </ListItemButton>
                 </List>
             </Drawer>
 
             {/* Page content */}
-            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-                <Toolbar />
-                <Outlet />
+            <Box component="main" sx={{flexGrow: 1, p: 3}}>
+                <Toolbar/>
+                <Outlet/>
             </Box>
         </Box>
     );

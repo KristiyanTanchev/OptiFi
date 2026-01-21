@@ -6,6 +6,7 @@ import AppLayout from "./layout/AppLayout";
 import RegisterPage from "./pages/RegisterPage";
 import AccountDetailsPage from "./pages/AccountDetailsPage";
 import CategoriesPage from "./pages/CategoriesPage";
+import ReportsPage from "./pages/ReportsPage";
 
 export default function App() {
     return (
@@ -15,10 +16,11 @@ export default function App() {
 
             <Route element={<RequireAuth/>}>
                 <Route element={<AppLayout/>}>
-                    <Route path="/accounts" element={<AccountsPage />} />
-                    <Route path="/accounts/:id" element={<AccountDetailsPage />} />
-                    <Route path="/" element={<Navigate to="/accounts" replace />} />
-                    <Route path="/categories" element={<CategoriesPage />} />
+                    <Route path="/accounts" element={<AccountsPage/>}/>
+                    <Route path="/accounts/:id" element={<AccountDetailsPage/>}/>
+                    <Route path="/" element={<Navigate to="/accounts" replace/>}/>
+                    <Route path="/categories" element={<CategoriesPage/>}/>
+                    <Route path="/reports" element={<ReportsPage/>}/>
                 </Route>
             </Route>
 

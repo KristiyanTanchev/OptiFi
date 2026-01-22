@@ -1,8 +1,8 @@
 package com.optifi.domain.reporting.application.result;
 
+import com.optifi.domain.reporting.repository.ReportSummaryAgg;
+import com.optifi.domain.reporting.repository.ReportSummaryByAccountAgg;
 import com.optifi.domain.shared.model.Currency;
-import com.optifi.domain.transaction.repository.ReportSummaryByAccountProjection;
-import com.optifi.domain.transaction.repository.ReportSummaryProjection;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,15 +18,15 @@ public record ReportSummaryResult(
 
     public static ReportSummaryResult from(
             Currency currency,
-            ReportSummaryProjection projection,
-            List<ReportSummaryByAccountProjection> byAccount
+            ReportSummaryAgg aggregation,
+            List<ReportSummaryByAccountAgg> byAccount
     ) {
         return new ReportSummaryResult(
                 currency.name(),
-                projection.getIncome(),
-                projection.getExpense(),
-                projection.getIncome().subtract(projection.getExpense()),
-                projection.getCount(),
+                aggregation.income(),
+                aggregation.expense(),
+                aggregation.income().subtract(aggregation.expense()),
+                aggregation.count(),
                 byAccount.stream().map(ReportSummaryByAccountResult::from).toList()
         );
     }

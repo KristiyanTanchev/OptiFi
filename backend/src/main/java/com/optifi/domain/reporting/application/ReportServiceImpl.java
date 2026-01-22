@@ -2,9 +2,9 @@ package com.optifi.domain.reporting.application;
 
 import com.optifi.domain.reporting.application.command.ReportSummaryCommand;
 import com.optifi.domain.reporting.application.result.ReportSummaryResult;
-import com.optifi.domain.transaction.repository.ReportSummaryByAccountProjection;
-import com.optifi.domain.transaction.repository.ReportSummaryProjection;
-import com.optifi.domain.transaction.repository.TransactionRepository;
+import com.optifi.domain.reporting.repository.ReportJdbcRepository;
+import com.optifi.domain.reporting.repository.ReportSummaryAgg;
+import com.optifi.domain.reporting.repository.ReportSummaryByAccountAgg;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,23 +16,23 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
 
-    private final TransactionRepository transactionRepository;
+    private final ReportJdbcRepository reportJdbcRepository;
 
     @Override
     @Transactional(readOnly = true)
     public ReportSummaryResult getReportSummary(ReportSummaryCommand cmd) {
-        ReportSummaryProjection summaryProjection = transactionRepository.getReportSummary(
+        ReportSummaryAgg reportSummary = reportJdbcRepository.getReportSummary(
                 cmd.userId(),
+                cmd.currency(),
                 cmd.from(),
-                cmd.to(),
-                cmd.currency()
+                cmd.to()
         );
-        List<ReportSummaryByAccountProjection> byAccount = transactionRepository.getReportSummaryByAccount(
+        List<ReportSummaryByAccountAgg> byAccount = reportJdbcRepository.getReportSummaryByAccount(
                 cmd.userId(),
+                cmd.currency(),
                 cmd.from(),
-                cmd.to(),
-                cmd.currency()
+                cmd.to()
         );
-        return ReportSummaryResult.from(cmd.currency(), summaryProjection, byAccount);
+        return ReportSummaryResult.from(cmd.currency(), reportSummary, byAccount);
     }
 }

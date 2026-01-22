@@ -1,6 +1,6 @@
 package com.optifi.domain.reporting.application.result;
 
-import com.optifi.domain.transaction.repository.ReportSummaryByAccountProjection;
+import com.optifi.domain.reporting.repository.ReportSummaryByAccountAgg;
 
 import java.math.BigDecimal;
 
@@ -14,15 +14,15 @@ public record ReportSummaryByAccountResult(
 ) {
 
     public static ReportSummaryByAccountResult from(
-            ReportSummaryByAccountProjection projection
+            ReportSummaryByAccountAgg aggregation
     ) {
         return new ReportSummaryByAccountResult(
-                projection.getAccountId(),
-                projection.getAccountName(),
-                projection.getIncome(),
-                projection.getExpense(),
-                projection.getIncome().subtract(projection.getExpense()),
-                projection.getCount()
+                aggregation.accountId(),
+                aggregation.accountName(),
+                aggregation.income(),
+                aggregation.expense(),
+                aggregation.income().subtract(aggregation.expense()),
+                aggregation.count()
         );
     }
 }

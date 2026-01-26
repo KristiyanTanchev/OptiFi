@@ -1,7 +1,6 @@
-package com.optifi.domain.user;
+package com.optifi.domain.user.application;
 
 import com.optifi.domain.shared.model.Currency;
-import com.optifi.domain.user.application.UserServiceImpl;
 import com.optifi.domain.user.application.command.*;
 import com.optifi.domain.user.model.SupportedLocale;
 import com.optifi.exceptions.*;

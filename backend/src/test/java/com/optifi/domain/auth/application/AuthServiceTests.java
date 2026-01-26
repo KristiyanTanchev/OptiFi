@@ -1,6 +1,5 @@
-package com.optifi.domain.auth;
+package com.optifi.domain.auth.application;
 
-import com.optifi.domain.auth.application.AuthServiceImpl;
 import com.optifi.domain.auth.application.command.LoginCommand;
 import com.optifi.domain.auth.application.command.RegisterUserCommand;
 import com.optifi.domain.auth.application.result.LoginResult;

@@ -29,4 +29,6 @@ public interface UserService {
     void banUser(BanUserCommand cmd);
 
     void unbanUser(UnbanUserCommand cmd);
+
+    User createGoogleUser(String email, String sub);
 }

@@ -8,7 +8,9 @@ CREATE TABLE IF NOT EXISTS users
 (
     id            bigint auto_increment primary key,
     username      varchar(32)                                                        not null,
-    password_hash varchar(255)                                                       not null,
+    password_hash varchar(255)                                                       null,
+    auth_provider VARCHAR(20) NOT NULL DEFAULT 'LOCAL',
+    provider_subject VARCHAR(128) NULL,
     email         varchar(100)                                                       not null,
     base_currency enum ('EUR', 'USD')                                                not null,
     locale        enum ('BG_BG', 'EN_GB', 'EN_US')                                   not null,
@@ -16,7 +18,8 @@ CREATE TABLE IF NOT EXISTS users
     created_at    datetime(6)                                                        not null,
     updated_at    datetime(6)                                                        null,
     constraint uk_users_email unique (email),
-    constraint uk_users_username unique (username)
+    constraint uk_users_username unique (username),
+    constraint uk_provider_subject unique (auth_provider, provider_subject)
 );
 
 CREATE TABLE IF NOT EXISTS accounts
@@ -74,84 +77,84 @@ CREATE TABLE IF NOT EXISTS transactions
 
 -- accounts(archived)
 SET @idx := (SELECT COUNT(1)
-             FROM information_schema.statistics
-             WHERE table_schema = 'optifi'
-               AND table_name = 'accounts'
-               AND index_name = 'idx_accounts_archived');
+    FROM information_schema.statistics
+    WHERE table_schema = 'optifi'
+    AND table_name = 'accounts'
+    AND index_name = 'idx_accounts_archived');
 SET @sql := IF(@idx = 0,
-               'CREATE INDEX idx_accounts_archived ON accounts (archived)',
-               'SELECT 1'
-            );
+    'CREATE INDEX idx_accounts_archived ON accounts (archived)',
+    'SELECT 1'
+    );
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- accounts(user_id)
 SET @idx := (SELECT COUNT(1)
-             FROM information_schema.statistics
-             WHERE table_schema = 'optifi'
-               AND table_name = 'accounts'
-               AND index_name = 'idx_accounts_user_id');
+    FROM information_schema.statistics
+    WHERE table_schema = 'optifi'
+    AND table_name = 'accounts'
+    AND index_name = 'idx_accounts_user_id');
 SET @sql := IF(@idx = 0,
-               'CREATE INDEX idx_accounts_user_id ON accounts (user_id)',
-               'SELECT 1'
-            );
+    'CREATE INDEX idx_accounts_user_id ON accounts (user_id)',
+    'SELECT 1'
+    );
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- transactions(account_id, occurred_at)
 SET @idx := (SELECT COUNT(1)
-             FROM information_schema.statistics
-             WHERE table_schema = 'optifi'
-               AND table_name = 'transactions'
-               AND index_name = 'idx_transactions_account_occurred');
+    FROM information_schema.statistics
+    WHERE table_schema = 'optifi'
+    AND table_name = 'transactions'
+    AND index_name = 'idx_transactions_account_occurred');
 SET @sql := IF(@idx = 0,
-               'CREATE INDEX idx_transactions_account_occurred ON transactions (account_id, occurred_at)',
-               'SELECT 1'
-            );
+    'CREATE INDEX idx_transactions_account_occurred ON transactions (account_id, occurred_at)',
+    'SELECT 1'
+    );
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- users(email)
 SET @idx := (SELECT COUNT(1)
-             FROM information_schema.statistics
-             WHERE table_schema = 'optifi'
-               AND table_name = 'users'
-               AND index_name = 'idx_users_email');
+    FROM information_schema.statistics
+    WHERE table_schema = 'optifi'
+    AND table_name = 'users'
+    AND index_name = 'idx_users_email');
 SET @sql := IF(@idx = 0,
-               'CREATE INDEX idx_users_email ON users (email)',
-               'SELECT 1'
-            );
+    'CREATE INDEX idx_users_email ON users (email)',
+    'SELECT 1'
+    );
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- users(username)
 SET @idx := (SELECT COUNT(1)
-             FROM information_schema.statistics
-             WHERE table_schema = 'optifi'
-               AND table_name = 'users'
-               AND index_name = 'idx_users_username');
+    FROM information_schema.statistics
+    WHERE table_schema = 'optifi'
+    AND table_name = 'users'
+    AND index_name = 'idx_users_username');
 SET @sql := IF(@idx = 0,
-               'CREATE INDEX idx_users_username ON users (username)',
-               'SELECT 1'
-            );
+    'CREATE INDEX idx_users_username ON users (username)',
+    'SELECT 1'
+    );
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- transactions(category_id)
 SET @idx := (SELECT COUNT(1)
-             FROM information_schema.statistics
-             WHERE table_schema = 'optifi'
-               AND table_name = 'transactions'
-               AND index_name = 'idx_transactions_category_id');
+    FROM information_schema.statistics
+    WHERE table_schema = 'optifi'
+    AND table_name = 'transactions'
+    AND index_name = 'idx_transactions_category_id');
 SET @sql := IF(@idx = 0,
-               'CREATE INDEX idx_transactions_category_id ON transactions (category_id)',
-               'SELECT 1'
-            );
+    'CREATE INDEX idx_transactions_category_id ON transactions (category_id)',
+    'SELECT 1'
+    );
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;

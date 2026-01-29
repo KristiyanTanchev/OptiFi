@@ -201,7 +201,7 @@ UPDATE transactions t
     JOIN categories c_eat       ON c_eat.user_id IS NULL AND c_eat.name = 'Eating Out'
 SET t.category_id =
         CASE
-            WHEN t.amount > 0
+    WHEN t.amount > 0
                 OR LOWER(t.description) LIKE '%salary%'
                 OR LOWER(t.description) LIKE '%funding%'
                 THEN c_income.id
@@ -222,6 +222,6 @@ SET t.category_id =
                 OR LOWER(t.description) LIKE '%taxi%'
                 THEN c_eat.id
             ELSE c_eat.id
-            END
-WHERE t.description LIKE '[seed] %';
+END
+    WHERE t.description LIKE '[seed] %';
 

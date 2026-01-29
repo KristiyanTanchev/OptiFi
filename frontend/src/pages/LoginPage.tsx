@@ -1,5 +1,5 @@
 import {useState} from "react";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import {
     Alert,
     Box,
@@ -11,9 +11,10 @@ import {
     Typography,
     Link,
 } from "@mui/material";
-import { login } from "../auth/authApi";
-import { saveSession } from "../auth/session";
+import {login} from "../auth/authApi";
+import {saveSession} from "../auth/session";
 import {useFeatures} from "../hooks/useFeatures.ts";
+import {GoogleLoginButton} from "../components/GoogleLoginButton.tsx"
 
 
 export default function LoginPage() {
@@ -25,7 +26,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { data: features} = useFeatures();
+    const {data: features} = useFeatures();
 
     const registrationEnabled = !!features?.registrationEnabled;
 
@@ -35,9 +36,9 @@ export default function LoginPage() {
         setError(null);
         setLoading(true);
         try {
-            const res = await login({ username, password });
+            const res = await login({username, password});
             saveSession(res);
-            nav("/", { replace: true });
+            nav("/", {replace: true});
         } catch (err: any) {
             setError(err?.response?.data?.message ?? "Login failed");
         } finally {
@@ -47,8 +48,8 @@ export default function LoginPage() {
 
     return (
         <Container maxWidth="sm">
-            <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-                <Paper elevation={3} sx={{ p: 4, width: "100%" }}>
+            <Box sx={{minHeight: "100vh", display: "grid", placeItems: "center"}}>
+                <Paper elevation={3} sx={{p: 4, width: "100%"}}>
                     <Stack spacing={2}>
                         <Typography variant="h4">OptiFI</Typography>
                         <Typography variant="body2" color="text.secondary">
@@ -76,6 +77,7 @@ export default function LoginPage() {
                                     required
                                     fullWidth
                                 />
+                                <GoogleLoginButton/>
 
                                 <Button type="submit" variant="contained" disabled={loading}>
                                     {loading ? "Signing in..." : "Sign in"}
@@ -86,10 +88,11 @@ export default function LoginPage() {
                                         Register
                                     </Button>
                                 ) : (
-                                    <Box sx={{ textAlign: "center", mt: 1 }}>
+                                    <Box sx={{textAlign: "center", mt: 1}}>
                                         <Typography variant="body2" color="text.secondary">
                                             Invitation-only demo. Contact the developer at{" "}
-                                            <Link href="mailto:dev@kvtmail.com?subject=OptiFI%20Demo%20Access" underline="hover">
+                                            <Link href="mailto:dev@kvtmail.com?subject=OptiFI%20Demo%20Access"
+                                                  underline="hover">
                                                 dev@kvtmail.com
                                             </Link>
                                             .

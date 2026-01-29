@@ -14,4 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     long countByRole(Role role);
+
+    <T> Optional<T> findByAuthProviderAndProviderSubject(String google, String sub);
 }

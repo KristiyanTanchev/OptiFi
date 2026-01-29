@@ -54,6 +54,7 @@ public class UserServiceImpl implements UserService {
                 .username(cmd.username())
                 .passwordHash(passwordEncoder.encode(cmd.password()))
                 .email(cmd.email())
+                .authProvider("LOCAL")
                 .role(role)
                 .build();
 
@@ -148,6 +149,21 @@ public class UserServiceImpl implements UserService {
 
         validateUnbanUser(currentUser, targetUser);
         targetUser.setRole(Role.USER);
+    }
+
+    @Override
+    public User createGoogleUser(String email, String sub) {
+        String username = email.substring(0, email.indexOf('@'));
+
+        User user = User.builder()
+                .username(username)
+                .passwordHash(null)
+                .authProvider("GOOGLE")
+                .providerSubject(sub)
+                .email(email)
+                .role(Role.USER)
+                .build();
+        return userRepository.save(user);
     }
 
     private void validateUserExists(Long userId) {

@@ -22,6 +22,11 @@ import java.util.Set;
         indexes = {
                 @Index(name = "idx_users_email", columnList = "email"),
                 @Index(name = "idx_users_username", columnList = "username")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_user_email", columnNames = {"email"}),
+                @UniqueConstraint(name="uk_users_username", columnNames = {"username"}),
+                @UniqueConstraint(name="uk_users_provider_subject", columnNames = {"auth_provider", "provider_subject"})
         }
 )
 @Getter
@@ -41,8 +46,15 @@ public class User {
     @NotBlank
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String passwordHash;
+
+    @Column(nullable = false, name = "auth_provider")
+    private String authProvider;
+
+    @Column(nullable = true, name = "provider_subject")
+    private String providerSubject;
+
 
     @Column(nullable = false, length = 100, unique = true)
     @NotBlank(message = "Email cannot be empty")

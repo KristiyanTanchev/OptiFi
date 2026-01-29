@@ -55,6 +55,10 @@ public class Category {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    public static Category createDefault(String name, String description, String icon) {
+        return Category.builder().name(name).icon(icon).description(description).build();
+    }
+
     public boolean isDefault() {
         return user == null;
     }

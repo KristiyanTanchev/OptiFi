@@ -20,4 +20,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("SELECT c FROM Category c WHERE c.id = :categoryId AND (c.user.id = :userId OR c.user IS NULL)")
     Optional<Category> findByIdAndUserId(Long categoryId, Long userId);
+
+    boolean existsByUserIsNullAndNameIgnoreCase(String name);
 }

@@ -1,5 +1,9 @@
 package com.optifi.domain.reporting.repository;
 
+import com.optifi.domain.reporting.repository.aggregations.ReportCategoriesAgg;
+import com.optifi.domain.reporting.repository.aggregations.ReportCategoriesByCatAgg;
+import com.optifi.domain.reporting.repository.aggregations.ReportSummaryAgg;
+import com.optifi.domain.reporting.repository.aggregations.ReportSummaryByAccountAgg;
 import com.optifi.domain.shared.model.Currency;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -91,5 +95,17 @@ public class ReportJdbcRepositoryImpl implements ReportJdbcRepository {
                         rs.getLong("count")
                 )
         );
+    }
+
+    @Override
+    public ReportCategoriesAgg getReportCategories(Long userid, Instant from, Instant to) {
+        //TODO: implement
+        return null;
+    }
+
+    @Override
+    public List<ReportCategoriesByCatAgg> getReportCategoriesByCat(Long userId, Instant from, Instant to) {
+        //TODO: implement
+        return List.of();
     }
 }

@@ -1,9 +1,13 @@
 package com.optifi.domain.reporting.api;
 
+import com.optifi.domain.reporting.api.request.ReportCategoriesRequestDto;
 import com.optifi.domain.reporting.api.request.ReportSummaryRequestDto;
+import com.optifi.domain.reporting.api.response.ReportCategoriesResponseDto;
 import com.optifi.domain.reporting.api.response.ReportSummaryResponseDto;
 import com.optifi.domain.reporting.application.ReportService;
+import com.optifi.domain.reporting.application.command.ReportCategoriesCommand;
 import com.optifi.domain.reporting.application.command.ReportSummaryCommand;
+import com.optifi.domain.reporting.application.result.ReportCategoriesResult;
 import com.optifi.domain.reporting.application.result.ReportSummaryResult;
 import com.optifi.security.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -32,6 +36,17 @@ public class ReportsRestController {
         ReportSummaryCommand cmd = requestDto.toCommand(principal.getId());
         ReportSummaryResult result = reportService.getReportSummary(cmd);
         ReportSummaryResponseDto response = ReportSummaryResponseDto.from(result);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<ReportCategoriesResponseDto> getCategoriesReport(
+            @Valid @ModelAttribute ReportCategoriesRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        ReportCategoriesCommand cmd = requestDto.toCommand(principal.getId());
+        ReportCategoriesResult result = reportService.getReportCategories(cmd);
+        ReportCategoriesResponseDto response = ReportCategoriesResponseDto.from(result);
         return ResponseEntity.ok(response);
     }
 }

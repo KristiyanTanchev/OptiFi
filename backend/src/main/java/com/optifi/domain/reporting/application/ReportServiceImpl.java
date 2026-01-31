@@ -1,10 +1,12 @@
 package com.optifi.domain.reporting.application;
 
+import com.optifi.domain.reporting.application.command.ReportCategoriesCommand;
 import com.optifi.domain.reporting.application.command.ReportSummaryCommand;
+import com.optifi.domain.reporting.application.result.ReportCategoriesResult;
 import com.optifi.domain.reporting.application.result.ReportSummaryResult;
 import com.optifi.domain.reporting.repository.ReportJdbcRepository;
-import com.optifi.domain.reporting.repository.ReportSummaryAgg;
-import com.optifi.domain.reporting.repository.ReportSummaryByAccountAgg;
+import com.optifi.domain.reporting.repository.aggregations.ReportSummaryAgg;
+import com.optifi.domain.reporting.repository.aggregations.ReportSummaryByAccountAgg;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,5 +36,11 @@ public class ReportServiceImpl implements ReportService {
                 cmd.to()
         );
         return ReportSummaryResult.from(cmd.currency(), reportSummary, byAccount);
+    }
+
+    @Override
+    public ReportCategoriesResult getReportCategories(ReportCategoriesCommand cmd) {
+        //TODO: implement
+        return null;
     }
 }

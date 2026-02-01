@@ -24,12 +24,14 @@ public interface ReportJdbcRepository {
 
     ReportCategoriesAgg getReportCategories(
             Long userid,
+            Integer sign,
             Instant from,
             Instant to
     );
 
     List<ReportCategoriesByCatAgg> getReportCategoriesByCat(
             Long userId,
+            Integer sign,
             Instant from,
             Instant to
     );

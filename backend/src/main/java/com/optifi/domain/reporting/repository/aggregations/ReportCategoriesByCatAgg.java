@@ -6,7 +6,6 @@ public record ReportCategoriesByCatAgg(
         Long categoryId,
         String categoryName,
         String icon,
-        BigDecimal amount,
-        BigDecimal percent
+        BigDecimal amount
 ) {
 }

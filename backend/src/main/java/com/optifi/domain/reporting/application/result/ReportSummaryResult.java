@@ -1,7 +1,7 @@
 package com.optifi.domain.reporting.application.result;
 
-import com.optifi.domain.reporting.repository.ReportSummaryAgg;
-import com.optifi.domain.reporting.repository.ReportSummaryByAccountAgg;
+import com.optifi.domain.reporting.repository.aggregations.ReportSummaryAgg;
+import com.optifi.domain.reporting.repository.aggregations.ReportSummaryByAccountAgg;
 import com.optifi.domain.shared.model.Currency;
 
 import java.math.BigDecimal;

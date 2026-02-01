@@ -1,6 +1,6 @@
 package com.optifi.domain.reporting.application.result;
 
-import com.optifi.domain.reporting.repository.ReportSummaryByAccountAgg;
+import com.optifi.domain.reporting.repository.aggregations.ReportSummaryByAccountAgg;
 
 import java.math.BigDecimal;
 

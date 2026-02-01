@@ -1,4 +1,4 @@
-package com.optifi.domain.reporting.repository;
+package com.optifi.domain.reporting.repository.aggregations;
 
 import java.math.BigDecimal;
 

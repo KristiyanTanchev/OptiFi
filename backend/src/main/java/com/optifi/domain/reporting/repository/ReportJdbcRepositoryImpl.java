@@ -4,7 +4,7 @@ import com.optifi.domain.reporting.repository.aggregations.ReportCategoriesAgg;
 import com.optifi.domain.reporting.repository.aggregations.ReportCategoriesByCatAgg;
 import com.optifi.domain.reporting.repository.aggregations.ReportSummaryAgg;
 import com.optifi.domain.reporting.repository.aggregations.ReportSummaryByAccountAgg;
-import com.optifi.domain.shared.model.Currency;
+import com.optifi.domain.shared.Currency;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;

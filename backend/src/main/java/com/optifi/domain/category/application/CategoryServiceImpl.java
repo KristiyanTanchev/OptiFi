@@ -7,7 +7,7 @@ import com.optifi.domain.category.application.result.CategoryDetailsResult;
 import com.optifi.domain.category.application.result.CategorySummaryResult;
 import com.optifi.domain.category.model.Category;
 import com.optifi.domain.category.repository.CategoryRepository;
-import com.optifi.domain.user.model.Role;
+import com.optifi.domain.shared.Role;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
 import com.optifi.exceptions.AuthorizationException;
@@ -39,7 +39,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDetailsResult createCategory(CategoryCreateCommand cmd) {
-        if (!featureProperties.allowUserCategories()){
+        if (!featureProperties.allowUserCategories()) {
             throw new AuthorizationException("Category creation is disabled");
         }
         User creator = userRepository.findById(cmd.userId()).orElseThrow(
@@ -90,12 +90,12 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(categoryId).orElseThrow(
                 () -> new EntityNotFoundException("Category", categoryId)
         );
-        if (category.isDefault()){
+        if (category.isDefault()) {
             if (user.getRole() != Role.ADMIN) {
                 throw new AuthorizationException("You cannot modify default category");
             }
         }
-        if (!category.isDefault()){
+        if (!category.isDefault()) {
             if (!category.getUser().getId().equals(userId) &&
                     user.getRole() != Role.ADMIN &&
                     user.getRole() != Role.MODERATOR) {

@@ -1,6 +1,6 @@
 package com.optifi.domain.transaction.application.result;
 
-import com.optifi.domain.shared.model.Currency;
+import com.optifi.domain.shared.Currency;
 import com.optifi.domain.transaction.application.command.TransactionGetSummaryCommand;
 import com.optifi.domain.transaction.repository.TransactionSummaryProjection;
 

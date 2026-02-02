@@ -1,6 +1,6 @@
 package com.optifi.domain.user.repository;
 
-import com.optifi.domain.user.model.Role;
+import com.optifi.domain.shared.Role;
 import com.optifi.domain.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 

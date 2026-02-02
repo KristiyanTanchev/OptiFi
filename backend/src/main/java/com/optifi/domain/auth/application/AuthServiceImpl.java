@@ -1,7 +1,7 @@
 package com.optifi.domain.auth.application;
 
 import com.optifi.domain.auth.application.command.GoogleOidcLoginCommand;
-import com.optifi.domain.user.model.Role;
+import com.optifi.domain.shared.Role;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
 import com.optifi.security.CustomUserDetails;
@@ -34,7 +34,7 @@ public class AuthServiceImpl implements AuthService {
 
         String jwt = jwtTokenProvider.generateToken(authentication);
         CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
-        return new LoginResult(principal.getId(), principal.getUsername(), principal.getRole().name(), jwt);
+        return new LoginResult(principal.getId(), principal.getUsername(), principal.getRole(), jwt);
     }
 
     @Override
@@ -65,6 +65,6 @@ public class AuthServiceImpl implements AuthService {
 
         String jwt = jwtTokenProvider.generateToken(authentication);
 
-        return new LoginResult(user.getId(), user.getUsername(), user.getRole().name(), jwt);
+        return new LoginResult(user.getId(), user.getUsername(), user.getRole(), jwt);
     }
 }

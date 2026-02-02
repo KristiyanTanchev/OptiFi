@@ -9,7 +9,7 @@ import com.optifi.domain.reporting.repository.aggregations.ReportCategoriesAgg;
 import com.optifi.domain.reporting.repository.aggregations.ReportCategoriesByCatAgg;
 import com.optifi.domain.reporting.repository.aggregations.ReportSummaryAgg;
 import com.optifi.domain.reporting.repository.aggregations.ReportSummaryByAccountAgg;
-import com.optifi.domain.shared.model.TransactionType;
+import com.optifi.domain.shared.TransactionType;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
 import com.optifi.exceptions.EntityNotFoundException;
@@ -48,9 +48,9 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public ReportCategoriesResult getReportCategories(ReportCategoriesCommand cmd) {
         Integer sign = null;
-        if (cmd.type() == TransactionType.EXPENSE){
+        if (cmd.type() == TransactionType.EXPENSE) {
             sign = -1;
-        }else if (cmd.type() == TransactionType.INCOME){
+        } else if (cmd.type() == TransactionType.INCOME) {
             sign = 1;
         }
         User user = userRepository.findById(cmd.userId()).orElseThrow(
@@ -72,7 +72,7 @@ public class ReportServiceImpl implements ReportService {
 
         return ReportCategoriesResult.from(
                 user.getBaseCurrency(),
-                cmd.type().name().toLowerCase(),
+                cmd.type(),
                 reportCategoriesAgg,
                 byCat
         );

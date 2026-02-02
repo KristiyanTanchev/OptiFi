@@ -5,10 +5,10 @@ import com.optifi.domain.account.application.command.CreateAccountCommand;
 import com.optifi.domain.account.application.result.AccountDetailsResult;
 import com.optifi.domain.account.application.result.AccountSummaryResult;
 import com.optifi.domain.account.model.Account;
-import com.optifi.domain.account.model.AccountType;
+import com.optifi.domain.shared.AccountType;
 import com.optifi.domain.account.repository.AccountRepository;
-import com.optifi.domain.shared.model.Currency;
-import com.optifi.domain.user.model.Role;
+import com.optifi.domain.shared.Currency;
+import com.optifi.domain.shared.Role;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
 import com.optifi.exceptions.AuthorizationException;
@@ -111,8 +111,8 @@ public class AccountServiceTests {
 
     @Test
     void createAccount_Should_throwException_When_userDoesNotExist() {
-        CreateAccountCommand cmd = CreateAccountCommand.from(
-                99L, "New Account", "Cash", "Eur", "My Bank"
+        CreateAccountCommand cmd = new CreateAccountCommand(
+                99L, "New Account", AccountType.CASH, Currency.EUR, "My Bank"
         );
 
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
@@ -127,8 +127,8 @@ public class AccountServiceTests {
 
     @Test
     void createAccount_Should_throwException_When_duplicateName() {
-        CreateAccountCommand cmd = CreateAccountCommand.from(
-                99L, "New Account", "cash", "eur", "My Bank"
+        CreateAccountCommand cmd = new CreateAccountCommand(
+                99L, "New Account", AccountType.CASH, Currency.EUR, "My Bank"
         );
 
         when(userRepository.findById(99L)).thenReturn(Optional.of(user99));
@@ -144,8 +144,8 @@ public class AccountServiceTests {
 
     @Test
     void createAccount_Should_saveAndReturnResult_When_valid() {
-        CreateAccountCommand cmd = CreateAccountCommand.from(
-                99L, "New Account", "cash", "eur", "My Bank"
+        CreateAccountCommand cmd = new CreateAccountCommand(
+                99L, "New Account", AccountType.CASH, Currency.EUR, "My Bank"
         );
 
         when(userRepository.findById(99L)).thenReturn(Optional.of(user99));
@@ -211,8 +211,8 @@ public class AccountServiceTests {
 
     @Test
     void updateAccount_Should_throwException_When_accountDoesNotExist() {
-        AccountUpdateCommand cmd = AccountUpdateCommand.from(
-                1L, 99L, "updated", "bank", "usd", "Inst"
+        AccountUpdateCommand cmd = new AccountUpdateCommand(
+                1L, 99L, "updated", AccountType.BANK, Currency.USD, "Inst"
         );
 
         when(accountRepository.findById(1L)).thenReturn(Optional.empty());

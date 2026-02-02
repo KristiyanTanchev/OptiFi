@@ -1,6 +1,7 @@
 package com.optifi.domain.account.model;
 
-import com.optifi.domain.shared.model.Currency;
+import com.optifi.domain.shared.AccountType;
+import com.optifi.domain.shared.Currency;
 import com.optifi.domain.transaction.model.Transaction;
 import com.optifi.domain.user.model.User;
 import jakarta.persistence.*;

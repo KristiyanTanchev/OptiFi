@@ -1,6 +1,8 @@
 package com.optifi.domain.account.application.result;
 
 import com.optifi.domain.account.model.Account;
+import com.optifi.domain.shared.AccountType;
+import com.optifi.domain.shared.Currency;
 import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
 
 import java.time.Instant;
@@ -9,8 +11,8 @@ import java.util.List;
 public record AccountDetailsResult(
         long id,
         String name,
-        String type,
-        String currency,
+        AccountType type,
+        Currency currency,
         String institution,
         List<TransactionSummaryResult> transactions,
         boolean archived,
@@ -21,8 +23,8 @@ public record AccountDetailsResult(
         return new AccountDetailsResult(
                 account.getId(),
                 account.getName(),
-                account.getType().name(),
-                account.getCurrency().name(),
+                account.getType(),
+                account.getCurrency(),
                 account.getInstitution(),
                 account.getTransactions()
                         .stream()

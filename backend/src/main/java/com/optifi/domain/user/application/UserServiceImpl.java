@@ -5,7 +5,7 @@ import com.optifi.domain.user.application.command.*;
 import com.optifi.exceptions.*;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
-import com.optifi.domain.user.model.Role;
+import com.optifi.domain.shared.Role;
 import com.optifi.domain.user.application.result.UserDetailsResult;
 import com.optifi.domain.user.application.result.UserSummaryResult;
 import lombok.RequiredArgsConstructor;

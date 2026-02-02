@@ -2,13 +2,13 @@ package com.optifi.domain.reporting.application.result;
 
 import com.optifi.domain.reporting.repository.aggregations.ReportSummaryAgg;
 import com.optifi.domain.reporting.repository.aggregations.ReportSummaryByAccountAgg;
-import com.optifi.domain.shared.model.Currency;
+import com.optifi.domain.shared.Currency;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public record ReportSummaryResult(
-        String currency,
+        Currency currency,
         BigDecimal income,
         BigDecimal expense,
         BigDecimal net,
@@ -22,7 +22,7 @@ public record ReportSummaryResult(
             List<ReportSummaryByAccountAgg> byAccount
     ) {
         return new ReportSummaryResult(
-                currency.name(),
+                currency,
                 aggregation.income(),
                 aggregation.expense(),
                 aggregation.income().subtract(aggregation.expense()),

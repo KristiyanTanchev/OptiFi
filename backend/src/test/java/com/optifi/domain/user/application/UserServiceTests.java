@@ -1,10 +1,10 @@
 package com.optifi.domain.user.application;
 
-import com.optifi.domain.shared.model.Currency;
+import com.optifi.domain.shared.Currency;
 import com.optifi.domain.user.application.command.*;
-import com.optifi.domain.user.model.SupportedLocale;
+import com.optifi.domain.shared.SupportedLocale;
 import com.optifi.exceptions.*;
-import com.optifi.domain.user.model.Role;
+import com.optifi.domain.shared.Role;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
 import com.optifi.domain.auth.application.command.RegisterUserCommand;
@@ -78,7 +78,7 @@ public class UserServiceTests {
 
         assertEquals(2L, result.id());
         assertEquals("alice", result.username());
-        assertEquals(Role.USER.name(), result.role());
+        assertEquals(Role.USER, result.role());
     }
 
     @Test
@@ -330,10 +330,10 @@ public class UserServiceTests {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         userService.setPreferences(
-                SetUserPreferenceCommand.from(
+                new SetUserPreferenceCommand(
                         1L,
-                        Currency.USD.name(),
-                        SupportedLocale.BG_BG.tag()
+                        Currency.USD,
+                        SupportedLocale.BG_BG
                 )
         );
         assertEquals(Currency.USD, user.getBaseCurrency());
@@ -487,14 +487,14 @@ public class UserServiceTests {
     }
 
     @Test
-    void banUser_Should_throwError_When_currentUserDoesNotExist(){
+    void banUser_Should_throwError_When_currentUserDoesNotExist() {
         when(userRepository.findById(2L)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
                 () -> userService.banUser(new BanUserCommand(1L, 2L)));
     }
 
     @Test
-    void banUser_Should_throwError_When_targetUserDoesNotExist(){
+    void banUser_Should_throwError_When_targetUserDoesNotExist() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
@@ -502,14 +502,14 @@ public class UserServiceTests {
     }
 
     @Test
-    void banUser_Should_throwError_When_currentUserMatchesTargetUser(){
+    void banUser_Should_throwError_When_currentUserMatchesTargetUser() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
         assertThrows(AuthorizationException.class,
                 () -> userService.banUser(new BanUserCommand(2L, 2L)));
     }
 
     @Test
-    void banUser_Should_throwError_When_currentUserIsNotAdminOrModerator(){
+    void banUser_Should_throwError_When_currentUserIsNotAdminOrModerator() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(user1));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
         assertThrows(AuthorizationException.class,
@@ -517,7 +517,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void banUser_Should_throwError_When_targetUserIsBlocked(){
+    void banUser_Should_throwError_When_targetUserIsBlocked() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
         user2.setRole(Role.BLOCKED);
@@ -526,7 +526,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void banUser_Should_throwError_When_targetUserIsAdmin(){
+    void banUser_Should_throwError_When_targetUserIsAdmin() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
         user2.setRole(Role.ADMIN);
@@ -535,7 +535,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void banUser_Should_succeed_When_targetValid(){
+    void banUser_Should_succeed_When_targetValid() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
         userService.banUser(new BanUserCommand(1L, 2L));
@@ -543,14 +543,14 @@ public class UserServiceTests {
     }
 
     @Test
-    void unbanUser_Should_throwError_When_currentUserDoesNotExist(){
+    void unbanUser_Should_throwError_When_currentUserDoesNotExist() {
         when(userRepository.findById(2L)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
                 () -> userService.unbanUser(new UnbanUserCommand(1L, 2L)));
     }
 
     @Test
-    void unbanUser_Should_throwError_When_targetUserDoesNotExist(){
+    void unbanUser_Should_throwError_When_targetUserDoesNotExist() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
@@ -558,14 +558,14 @@ public class UserServiceTests {
     }
 
     @Test
-    void unbanUser_Should_throwError_When_currentUserMatchesTargetUser(){
+    void unbanUser_Should_throwError_When_currentUserMatchesTargetUser() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
         assertThrows(AuthorizationException.class,
                 () -> userService.unbanUser(new UnbanUserCommand(2L, 2L)));
     }
 
     @Test
-    void unbanUser_Should_throwError_When_currentUserIsNotAdminOrModerator(){
+    void unbanUser_Should_throwError_When_currentUserIsNotAdminOrModerator() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(user1));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
         assertThrows(AuthorizationException.class,
@@ -573,7 +573,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void unbanUser_Should_throwError_When_targetUserIsNotBlocked(){
+    void unbanUser_Should_throwError_When_targetUserIsNotBlocked() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
         assertThrows(IllegalStateTransitionException.class,
@@ -581,7 +581,7 @@ public class UserServiceTests {
     }
 
     @Test
-    void unbanUser_Should_succeed_When_targetValid(){
+    void unbanUser_Should_succeed_When_targetValid() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
         user2.setRole(Role.BLOCKED);

@@ -2,7 +2,9 @@ package com.optifi.domain.user.model;
 
 
 import com.optifi.domain.account.model.Account;
-import com.optifi.domain.shared.model.Currency;
+import com.optifi.domain.shared.Currency;
+import com.optifi.domain.shared.Role;
+import com.optifi.domain.shared.SupportedLocale;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -25,8 +27,8 @@ import java.util.Set;
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_user_email", columnNames = {"email"}),
-                @UniqueConstraint(name="uk_users_username", columnNames = {"username"}),
-                @UniqueConstraint(name="uk_users_provider_subject", columnNames = {"auth_provider", "provider_subject"})
+                @UniqueConstraint(name = "uk_users_username", columnNames = {"username"}),
+                @UniqueConstraint(name = "uk_users_provider_subject", columnNames = {"auth_provider", "provider_subject"})
         }
 )
 @Getter
@@ -99,16 +101,6 @@ public class User {
     void normalizeFields() {
         username = username.toLowerCase(Locale.ROOT);
         email = email.toLowerCase(Locale.ROOT);
-    }
-
-    public void addAccount(Account account) {
-        accounts.add(account);
-        account.setUser(this);
-    }
-
-    public void removeAccount(Account account) {
-        accounts.remove(account);
-        account.setUser(null);
     }
 
     public Set<Account> getAccounts() {

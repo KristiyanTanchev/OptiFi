@@ -1,12 +1,13 @@
 package com.optifi.domain.reporting.api.response;
 
 import com.optifi.domain.reporting.application.result.ReportSummaryResult;
+import com.optifi.domain.shared.Currency;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public record ReportSummaryResponseDto(
-        String currency,
+        Currency currency,
         BigDecimal income,
         BigDecimal expense,
         BigDecimal net,

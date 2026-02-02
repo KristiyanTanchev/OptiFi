@@ -1,7 +1,7 @@
 package com.optifi.domain.account.application.command;
 
-import com.optifi.domain.account.model.AccountType;
-import com.optifi.domain.shared.model.Currency;
+import com.optifi.domain.shared.AccountType;
+import com.optifi.domain.shared.Currency;
 
 public record CreateAccountCommand(
         long userId,
@@ -10,13 +10,4 @@ public record CreateAccountCommand(
         Currency currency,
         String institution
 ) {
-    public static CreateAccountCommand from(long userId, String name, String type, String currency, String institution) {
-        return new CreateAccountCommand(
-                userId,
-                name,
-                AccountType.fromString(type),
-                Currency.fromString(currency),
-                institution
-        );
-    }
 }

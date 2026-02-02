@@ -1,7 +1,8 @@
 package com.optifi.domain.account.api.request;
 
 import com.optifi.domain.account.application.command.CreateAccountCommand;
-import jakarta.validation.constraints.NotBlank;
+import com.optifi.domain.shared.AccountType;
+import com.optifi.domain.shared.Currency;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -10,15 +11,15 @@ public record AccountCreateRequestDto(
         @Size(min = 3, max = 32, message = "Account name must be between 3 and 32 characters")
         String name,
 
-        @NotNull @NotBlank
-        String type,
+        @NotNull
+        AccountType type,
 
-        @NotNull @NotBlank
-        String currency,
+        @NotNull
+        Currency currency,
 
         String institution) {
 
     public CreateAccountCommand toCreateCommand(long userId) {
-        return CreateAccountCommand.from(userId, name, type, currency, institution);
+        return new CreateAccountCommand(userId, name, type, currency, institution);
     }
 }

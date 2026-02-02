@@ -1,13 +1,14 @@
 package com.optifi.domain.auth.api.response;
 
 import com.optifi.domain.auth.application.result.LoginResult;
+import com.optifi.domain.shared.Role;
 
 public record LoginResponseDto(
         String token,
         String type,
         Long id,
         String username,
-        String role) {
+        Role role) {
     private static final String TOKEN_TYPE = "Bearer";
 
     public static LoginResponseDto fromResult(LoginResult result) {

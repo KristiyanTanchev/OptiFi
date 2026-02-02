@@ -4,7 +4,7 @@ import com.optifi.domain.account.model.Account;
 import com.optifi.domain.account.repository.AccountRepository;
 import com.optifi.domain.category.model.Category;
 import com.optifi.domain.category.repository.CategoryRepository;
-import com.optifi.domain.shared.model.Currency;
+import com.optifi.domain.shared.Currency;
 import com.optifi.domain.transaction.application.command.*;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
 import com.optifi.domain.transaction.application.result.TransactionGetSummaryResult;
@@ -58,8 +58,6 @@ public class TransactionServiceTests {
 
     @BeforeEach
     void setUp() {
-        // IMPORTANT: no stubbing in setUp()
-
         User user99 = User.builder().id(99L).build();
         User otherUser = User.builder().id(55L).build();
 
@@ -93,10 +91,6 @@ public class TransactionServiceTests {
                 .build();
     }
 
-    // -------------------------
-    // getAllUserTransactions
-    // -------------------------
-
     @Test
     void getAllUserTransactions_Should_returnMappedPage() {
         TransactionQuery query = new TransactionQuery(
@@ -121,10 +115,6 @@ public class TransactionServiceTests {
 
         verify(transactionRepository).findAll(any(Specification.class), eq(pageable));
     }
-
-    // -------------------------
-    // getTransaction
-    // -------------------------
 
     @Test
     void getTransaction_Should_throwException_When_transactionNotFound() {
@@ -168,10 +158,6 @@ public class TransactionServiceTests {
         assertEquals("Lunch", result.description());
         assertEquals(Instant.parse("2026-01-01T10:00:00Z"), result.occurredAt());
     }
-
-    // -------------------------
-    // createTransaction
-    // -------------------------
 
     @Test
     void createTransaction_Should_throwException_When_accountNotFound() {
@@ -264,10 +250,6 @@ public class TransactionServiceTests {
         assertEquals(Instant.parse("2026-01-02T10:00:00Z"), captor.getValue().getOccurredAt());
     }
 
-    // -------------------------
-    // updateTransaction
-    // -------------------------
-
     @Test
     void updateTransaction_Should_throwException_When_transactionNotFound() {
         TransactionUpdateCommand cmd = new TransactionUpdateCommand(
@@ -359,13 +341,8 @@ public class TransactionServiceTests {
         assertEquals("Updated", tx1.getDescription());
         assertEquals(Instant.parse("2026-01-03T10:00:00Z"), tx1.getOccurredAt());
 
-        // relies on transactional dirty checking
         verify(transactionRepository, never()).save(any(Transaction.class));
     }
-
-    // -------------------------
-    // deleteTransaction
-    // -------------------------
 
     @Test
     void deleteTransaction_Should_throwException_When_transactionNotFound() {
@@ -407,10 +384,6 @@ public class TransactionServiceTests {
 
         verify(transactionRepository).delete(tx1);
     }
-
-    // -------------------------
-    // getTransactionSummary (Instant + normalizeQuery)
-    // -------------------------
 
     @Test
     void getTransactionSummary_Should_throwException_When_accountNotFound() {

@@ -1,12 +1,14 @@
 package com.optifi.domain.account.application.result;
 
 import com.optifi.domain.account.model.Account;
+import com.optifi.domain.shared.AccountType;
+import com.optifi.domain.shared.Currency;
 
 public record AccountSummaryResult(
         long id,
         String name,
-        String type,
-        String currency,
+        AccountType type,
+        Currency currency,
         String institution,
         boolean archived
 ) {
@@ -14,8 +16,8 @@ public record AccountSummaryResult(
         return new AccountSummaryResult(
                 account.getId(),
                 account.getName(),
-                account.getType().name(),
-                account.getCurrency().name(),
+                account.getType(),
+                account.getCurrency(),
                 account.getInstitution(),
                 account.isArchived()
         );

@@ -94,6 +94,14 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, null);
     }
 
+    @ExceptionHandler(InvalidDateException.class)
+    public ResponseEntity<ApiError> handleInvalidDateException(
+            InvalidDateException e,
+            HttpServletRequest request
+    ) {
+        return buildError(HttpStatus.BAD_REQUEST, e.getMessage(), request, null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e,

@@ -6,7 +6,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long>, JpaSpecificationExecutor<Transaction> {
     @Query("""
@@ -30,4 +32,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
             @Param("categoryId") Long categoryId,
             @Param("query") String query
     );
+
+    List<TransactionTimeAndAmount> findByAccount_User_IdAndAmountGreaterThanAndOccurredAtGreaterThanEqualAndOccurredAtLessThanOrderByOccurredAt(Long aLong, BigDecimal zero, Instant start, Instant endExclusive);
+
+    List<TransactionTimeAndAmount> findByAccount_User_IdAndAmountLessThanAndOccurredAtGreaterThanEqualAndOccurredAtLessThanOrderByOccurredAt(Long aLong, BigDecimal zero, Instant start, Instant endExclusive);
+
+    List<TransactionTimeAndAmount> findByAccount_User_IdAndOccurredAtGreaterThanEqualAndOccurredAtLessThanOrderByOccurredAt(Long aLong, Instant start, Instant endExclusive);
 }

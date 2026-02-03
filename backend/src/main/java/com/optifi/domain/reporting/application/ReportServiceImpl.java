@@ -2,22 +2,37 @@ package com.optifi.domain.reporting.application;
 
 import com.optifi.domain.reporting.application.command.ReportCategoriesCommand;
 import com.optifi.domain.reporting.application.command.ReportSummaryCommand;
+import com.optifi.domain.reporting.application.command.ReportTimeChartCommand;
 import com.optifi.domain.reporting.application.result.ReportCategoriesResult;
 import com.optifi.domain.reporting.application.result.ReportSummaryResult;
+import com.optifi.domain.reporting.application.result.ReportTimeChartByPeriodResult;
+import com.optifi.domain.reporting.application.result.ReportTimeChartResult;
 import com.optifi.domain.reporting.repository.ReportJdbcRepository;
-import com.optifi.domain.reporting.repository.aggregations.ReportCategoriesAgg;
-import com.optifi.domain.reporting.repository.aggregations.ReportCategoriesByCatAgg;
-import com.optifi.domain.reporting.repository.aggregations.ReportSummaryAgg;
-import com.optifi.domain.reporting.repository.aggregations.ReportSummaryByAccountAgg;
+import com.optifi.domain.reporting.repository.aggregations.*;
+import com.optifi.domain.shared.Currency;
+import com.optifi.domain.shared.TimeBucket;
+import com.optifi.domain.shared.TimeHelper;
 import com.optifi.domain.shared.TransactionType;
+import com.optifi.domain.transaction.repository.TransactionTimeAndAmount;
+import com.optifi.domain.transaction.repository.TransactionRepository;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
 import com.optifi.exceptions.EntityNotFoundException;
+import com.optifi.exceptions.InvalidDateException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -26,6 +41,11 @@ public class ReportServiceImpl implements ReportService {
 
     private final ReportJdbcRepository reportJdbcRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
+    private final TimeHelper timeHelper;
+
+    private static final Integer MIN_INTERVAL = 2;
+    private static final Integer MAX_INTERVAL = 50;
 
     @Override
     @Transactional(readOnly = true)
@@ -76,5 +96,105 @@ public class ReportServiceImpl implements ReportService {
                 reportCategoriesAgg,
                 byCat
         );
+    }
+
+    @Override
+    public ReportTimeChartResult getReportTimeChart(ReportTimeChartCommand cmd) {
+        ZoneId zone = ZoneId.of("Europe/Sofia"); // TODO user timezone
+
+        Currency currency = userRepository.findById(cmd.userId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"))
+                .getBaseCurrency();
+
+        validateTimeInterval(cmd.from(), cmd.to());
+
+        LocalDate fromKey = normalizeToBucketStart(cmd.from(), cmd.bucket());
+        LocalDate toKey = normalizeToBucketStart(cmd.to(), cmd.bucket());
+
+        List<ReportTimeChartByPeriodResult> buckets = initializeInterval(
+                fromKey,
+                toKey,
+                cmd.bucket().toChronoUnit()
+        );
+
+        Map<LocalDate, ReportTimeChartByPeriodResult> bucketByDate = new HashMap<>();
+        for (ReportTimeChartByPeriodResult b : buckets) {
+            b.setAmount(BigDecimal.ZERO);
+            bucketByDate.put(b.getDate(), b);
+        }
+
+        Instant start = timeHelper.startOfDay(cmd.from(), zone);
+        Instant endExclusive = timeHelper.startOfNextDay(cmd.to(), zone);
+
+        List<TransactionTimeAndAmount> transactions = switch (cmd.type()) {
+            case INCOME -> transactionRepository
+                    .findByAccount_User_IdAndAmountGreaterThanAndOccurredAtGreaterThanEqualAndOccurredAtLessThanOrderByOccurredAt(
+                            cmd.userId(), BigDecimal.ZERO, start, endExclusive);
+            case EXPENSE -> transactionRepository
+                    .findByAccount_User_IdAndAmountLessThanAndOccurredAtGreaterThanEqualAndOccurredAtLessThanOrderByOccurredAt(
+                            cmd.userId(), BigDecimal.ZERO, start, endExclusive);
+            case ANY -> transactionRepository
+                    .findByAccount_User_IdAndOccurredAtGreaterThanEqualAndOccurredAtLessThanOrderByOccurredAt(
+                            cmd.userId(), start, endExclusive);
+        };
+
+        for (TransactionTimeAndAmount tx : transactions) {
+            LocalDate txDate = timeHelper.toLocalDate(tx.getOccurredAt(), zone);
+            LocalDate key = normalizeToBucketStart(txDate, cmd.bucket());
+
+            ReportTimeChartByPeriodResult bucket = bucketByDate.get(key);
+
+            BigDecimal value = tx.getAmount();
+            if (cmd.type() == TransactionType.EXPENSE) {
+                value = value.abs(); // make expenses positive for charts
+            }
+
+            bucket.setAmount(bucket.getAmount().add(value));
+        }
+
+        return new ReportTimeChartResult(cmd.bucket(), cmd.type(), currency, buckets);
+    }
+
+    private LocalDate normalizeToBucketStart(LocalDate date, TimeBucket bucket) {
+        return switch (bucket) {
+            case DAY -> date;
+            case WEEK -> date.with(DayOfWeek.MONDAY);
+            case MONTH -> date.withDayOfMonth(1);
+            case YEAR -> date.withDayOfYear(1);
+        };
+    }
+
+    private void validateTimeInterval(LocalDate start, LocalDate end) {
+        if (start == null || end == null) {
+            throw new InvalidDateException("From and to dates are required");
+        }
+        if (start.isAfter(end)) {
+            throw new InvalidDateException("From date must be before to date");
+        }
+    }
+
+    private List<ReportTimeChartByPeriodResult> initializeInterval(
+            LocalDate start,
+            LocalDate end,
+            ChronoUnit unit
+    ) {
+        long steps = unit.between(start, end) + 1;
+
+        if (steps < ReportServiceImpl.MIN_INTERVAL || steps > ReportServiceImpl.MAX_INTERVAL) {
+            throw new InvalidDateException(String.format(
+                    "Interval must be between %d and %d %s.",
+                    ReportServiceImpl.MIN_INTERVAL, ReportServiceImpl.MAX_INTERVAL, unit.toString().toLowerCase()
+            ));
+        }
+
+        List<ReportTimeChartByPeriodResult> result = new ArrayList<>((int) steps);
+        LocalDate cursor = start;
+
+        for (int i = 0; i < steps; i++) {
+            result.add(new ReportTimeChartByPeriodResult(cursor, BigDecimal.ZERO));
+            cursor = cursor.plus(1, unit);
+        }
+
+        return result;
     }
 }

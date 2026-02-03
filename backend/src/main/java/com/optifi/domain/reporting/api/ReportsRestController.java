@@ -2,13 +2,17 @@ package com.optifi.domain.reporting.api;
 
 import com.optifi.domain.reporting.api.request.ReportCategoriesRequestDto;
 import com.optifi.domain.reporting.api.request.ReportSummaryRequestDto;
+import com.optifi.domain.reporting.api.request.ReportTimeChartRequestDto;
 import com.optifi.domain.reporting.api.response.ReportCategoriesResponseDto;
 import com.optifi.domain.reporting.api.response.ReportSummaryResponseDto;
+import com.optifi.domain.reporting.api.response.ReportTimeChartResponseDto;
 import com.optifi.domain.reporting.application.ReportService;
 import com.optifi.domain.reporting.application.command.ReportCategoriesCommand;
 import com.optifi.domain.reporting.application.command.ReportSummaryCommand;
+import com.optifi.domain.reporting.application.command.ReportTimeChartCommand;
 import com.optifi.domain.reporting.application.result.ReportCategoriesResult;
 import com.optifi.domain.reporting.application.result.ReportSummaryResult;
+import com.optifi.domain.reporting.application.result.ReportTimeChartResult;
 import com.optifi.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +51,17 @@ public class ReportsRestController {
         ReportCategoriesCommand cmd = requestDto.toCommand(principal.getId());
         ReportCategoriesResult result = reportService.getReportCategories(cmd);
         ReportCategoriesResponseDto response = ReportCategoriesResponseDto.from(result);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/time-chart")
+    public ResponseEntity<ReportTimeChartResponseDto> getTimeChartReport(
+            @Valid @ModelAttribute ReportTimeChartRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        ReportTimeChartCommand cmd = requestDto.toCommand(principal.getId());
+        ReportTimeChartResult result = reportService.getReportTimeChart(cmd);
+        ReportTimeChartResponseDto response = ReportTimeChartResponseDto.from(result);
         return ResponseEntity.ok(response);
     }
 }

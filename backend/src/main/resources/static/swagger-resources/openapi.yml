@@ -7,24 +7,24 @@ info:
     RESTful API for personal finance management application.
 
 servers:
-  - url: http://localhost:8080
   - url: https://optifi.kvtmail.com
+  - url: http://localhost:8080
 
 tags:
   - name: Auth
     description: Authentication endpoints
 
 security:
-  - bearerAuth: []
+  - bearerAuth: [ ]
 
 paths:
 
   /api/auth/register:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Register user
       description: Public endpoint. Creates a new user account.
-      security: []
+      security: [ ]
       requestBody:
         required: true
         content:
@@ -53,10 +53,10 @@ paths:
 
   /api/auth/login:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Login
       description: Public endpoint. Returns JWT token.
-      security: []
+      security: [ ]
       requestBody:
         required: true
         content:
@@ -83,6 +83,203 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+  /api/reports/time-chart:
+    get:
+      tags:
+        - Reporting
+      summary: Time chart report
+      description: >
+        Returns a time-series chart of transaction totals for the authenticated user,
+        grouped by the requested time bucket (DAY/WEEK/MONTH/YEAR) within the inclusive
+        date range [from..to]. Amounts are returned in the user's base currency.
+      operationId: getTimeChartReport
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: bucket
+          in: query
+          required: true
+          description: Time grouping bucket.
+          schema:
+            $ref: "#/components/schemas/TimeBucket"
+        - name: type
+          in: query
+          required: true
+          description: Transaction type filter.
+          schema:
+            $ref: "#/components/schemas/TransactionType"
+        - name: from
+          in: query
+          required: true
+          description: Start date (inclusive), ISO-8601 (YYYY-MM-DD).
+          schema:
+            type: string
+            format: date
+            example: "2026-01-01"
+        - name: to
+          in: query
+          required: true
+          description: End date (inclusive), ISO-8601 (YYYY-MM-DD).
+          schema:
+            type: string
+            format: date
+            example: "2026-01-31"
+      responses:
+        "200":
+          description: Report generated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportTimeChartResponseDto"
+              examples:
+                dailyIncome:
+                  summary: Daily income chart
+                  value:
+                    bucket: DAY
+                    type: INCOME
+                    currency: EUR
+                    points:
+                      - date: "2026-01-01"
+                        amount: 120.00
+                      - date: "2026-01-02"
+                        amount: 0.00
+                weeklyExpense:
+                  summary: Weekly expense chart (week starts Monday)
+                  value:
+                    bucket: WEEK
+                    type: EXPENSE
+                    currency: EUR
+                    points:
+                      - date: "2026-01-05"
+                        amount: 85.50
+                      - date: "2026-01-12"
+                        amount: 40.00
+        "400":
+          description: Invalid request (validation, invalid enums, or invalid date interval).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              examples:
+                validationFailed:
+                  summary: Bean validation failed
+                  value:
+                    timestamp: "2026-02-03T12:34:56"
+                    status: 400
+                    error: "Bad Request"
+                    message: "Validation failed"
+                    path: "/api/reports/time-chart"
+                    fieldErrors:
+                      bucket: "must not be null"
+                      from: "must not be null"
+                invalidInterval:
+                  summary: Invalid interval
+                  value:
+                    timestamp: "2026-02-03T12:34:56"
+                    status: 400
+                    error: "Bad Request"
+                    message: "From date must be before to date"
+                    path: "/api/reports/time-chart"
+                    fieldErrors: null
+                invalidEnum:
+                  summary: Enum parsing error
+                  value:
+                    timestamp: "2026-02-03T12:34:56"
+                    status: 400
+                    error: "Bad Request"
+                    message: "Invalid request"
+                    path: "/api/reports/time-chart"
+                    fieldErrors:
+                      type: "Invalid value. Allowed: INCOME, EXPENSE, ANY"
+        "401":
+          description: Unauthorized (missing/invalid JWT).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              examples:
+                unauthorized:
+                  summary: Invalid credentials / missing token
+                  value:
+                    timestamp: "2026-02-03T12:34:56"
+                    status: 401
+                    error: "Unauthorized"
+                    message: "Invalid username or password"
+                    path: "/api/reports/time-chart"
+                    fieldErrors: null
+        "403":
+          description: Forbidden (banned user or access denied).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              examples:
+                banned:
+                  summary: User banned
+                  value:
+                    timestamp: "2026-02-03T12:34:56"
+                    status: 403
+                    error: "Forbidden"
+                    message: "User is banned"
+                    path: "/api/reports/time-chart"
+                    fieldErrors: null
+                denied:
+                  summary: Access denied
+                  value:
+                    timestamp: "2026-02-03T12:34:56"
+                    status: 403
+                    error: "Forbidden"
+                    message: "Access denied"
+                    path: "/api/reports/time-chart"
+                    fieldErrors: null
+        "404":
+          description: Not found (user not found).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              examples:
+                notFound:
+                  summary: User not found
+                  value:
+                    timestamp: "2026-02-03T12:34:56"
+                    status: 404
+                    error: "Not Found"
+                    message: "User not found"
+                    path: "/api/reports/time-chart"
+                    fieldErrors: null
+        "409":
+          description: Conflict (duplicate entity / illegal state transition).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              examples:
+                conflict:
+                  summary: Conflict
+                  value:
+                    timestamp: "2026-02-03T12:34:56"
+                    status: 409
+                    error: "Conflict"
+                    message: "Conflict"
+                    path: "/api/reports/time-chart"
+                    fieldErrors: null
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              examples:
+                unexpected:
+                  summary: Unexpected error
+                  value:
+                    timestamp: "2026-02-03T12:34:56"
+                    status: 500
+                    error: "Internal Server Error"
+                    message: "Unexpected error"
+                    path: "/api/reports/time-chart"
+                    fieldErrors: null
 components:
 
   securitySchemes:
@@ -95,7 +292,7 @@ components:
 
     LoginRequestDto:
       type: object
-      required: [username, password]
+      required: [ username, password ]
       properties:
         username:
           type: string
@@ -123,7 +320,7 @@ components:
 
     UserCreateDto:
       type: object
-      required: [username, password]
+      required: [ username, password ]
       properties:
         username:
           type: string
@@ -154,25 +351,81 @@ components:
           format: date-time
           example: "2025-12-14T12:00:00"
 
+    ReportTimeChartResponseDto:
+      type: object
+      required: [ bucket, type, currency, points ]
+      properties:
+        bucket:
+          $ref: "#/components/schemas/TimeBucket"
+        type:
+          $ref: "#/components/schemas/TransactionType"
+        currency:
+          $ref: "#/components/schemas/Currency"
+        points:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportTimeChartByPeriodResponseDto"
+
+    ReportTimeChartByPeriodResponseDto:
+      type: object
+      required: [ date, amount ]
+      properties:
+        date:
+          type: string
+          format: date
+          description: >
+            Period start date for the bucket. For WEEK, this is the Monday of the week;
+            for MONTH, the first day of the month; for YEAR, January 1st of the year.
+          example: "2026-01-05"
+        amount:
+          type: number
+          format: decimal
+          description: Total amount for the period.
+          example: 85.50
+
+    TimeBucket:
+      type: string
+      enum: [ DAY, WEEK, MONTH, YEAR ]
+
+    TransactionType:
+      type: string
+      enum: [ INCOME, EXPENSE, ANY ]
+
+    Currency:
+      type: string
+      enum: [ USD, EUR ]
 
     ApiError:
       type: object
+      required: [ timestamp, status, error, message, path, fieldErrors ]
       properties:
         timestamp:
           type: string
           format: date-time
-          example: "2025-12-14T10:30:00"
+          description: Server timestamp of the error.
+          example: "2026-02-03T12:34:56"
         status:
           type: integer
+          description: HTTP status code.
           example: 400
         error:
           type: string
-          example: Bad Request
+          description: HTTP reason phrase.
+          example: "Bad Request"
         message:
           type: string
-          example: Validation failed
+          description: Human-readable error message.
+          example: "Validation failed"
+        path:
+          type: string
+          description: Request path.
+          example: "/api/reports/time-chart"
         fieldErrors:
           type: object
           nullable: true
           additionalProperties:
             type: string
+          description: Field-level validation errors (if applicable).
+          example:
+            from: "must not be null"
+            to: "must not be null"

@@ -1,6 +1,7 @@
 package com.optifi.domain.auth.api;
 
 import com.optifi.config.FeatureProperties;
+import com.optifi.domain.auth.api.mapper.AuthMapper;
 import com.optifi.domain.auth.api.request.GoogleOidcLoginRequestDto;
 import com.optifi.domain.auth.api.request.LoginRequestDto;
 import com.optifi.domain.auth.api.response.LoginResponseDto;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthRestController {
     private final AuthService authService;
+    private final AuthMapper mapper;
     private final FeatureProperties features;
 
     @PostMapping("/register")
@@ -37,7 +39,7 @@ public class AuthRestController {
                 registerRequestDto.password(),
                 registerRequestDto.email());
         LoginResult result = authService.register(cmd);
-        LoginResponseDto response = LoginResponseDto.fromResult(result);
+        LoginResponseDto response = mapper.toLoginResponseDto(result);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -45,14 +47,15 @@ public class AuthRestController {
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
         LoginCommand cmd = new LoginCommand(loginRequest.username(), loginRequest.password());
         LoginResult result = authService.login(cmd);
-        LoginResponseDto response = LoginResponseDto.fromResult(result);
+        LoginResponseDto response = mapper.toLoginResponseDto(result);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/oidc/google")
     public ResponseEntity<LoginResponseDto> loginWithGoogle(@Valid @RequestBody GoogleOidcLoginRequestDto req) {
         LoginResult result = authService.loginWithGoogle(new GoogleOidcLoginCommand(req.idToken()));
-        return ResponseEntity.ok(LoginResponseDto.fromResult(result));
+        LoginResponseDto response = mapper.toLoginResponseDto(result);
+        return ResponseEntity.ok(response);
     }
 }
 

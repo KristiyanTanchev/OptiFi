@@ -1,9 +1,10 @@
 package com.optifi.domain.reporting.api.response;
 
-import com.optifi.domain.reporting.application.result.ReportSummaryByAccountResult;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 
+@Builder
 public record ReportSummaryByAccountResponseDto(
         Long accountId,
         String accountName,
@@ -12,14 +13,4 @@ public record ReportSummaryByAccountResponseDto(
         BigDecimal net,
         Long count
 ) {
-    public static ReportSummaryByAccountResponseDto from(ReportSummaryByAccountResult result) {
-        return new ReportSummaryByAccountResponseDto(
-                result.accountId(),
-                result.accountName(),
-                result.income(),
-                result.expense(),
-                result.net(),
-                result.count()
-        );
-    }
 }

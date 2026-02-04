@@ -1,7 +1,7 @@
 package com.optifi.domain.account.application;
 
 import com.optifi.domain.account.application.command.AccountUpdateCommand;
-import com.optifi.domain.account.application.command.CreateAccountCommand;
+import com.optifi.domain.account.application.command.AccountCreateCommand;
 import com.optifi.domain.account.application.result.AccountDetailsResult;
 import com.optifi.domain.account.application.result.AccountSummaryResult;
 import com.optifi.domain.account.model.Account;
@@ -111,7 +111,7 @@ public class AccountServiceTests {
 
     @Test
     void createAccount_Should_throwException_When_userDoesNotExist() {
-        CreateAccountCommand cmd = new CreateAccountCommand(
+        AccountCreateCommand cmd = new AccountCreateCommand(
                 99L, "New Account", AccountType.CASH, Currency.EUR, "My Bank"
         );
 
@@ -127,7 +127,7 @@ public class AccountServiceTests {
 
     @Test
     void createAccount_Should_throwException_When_duplicateName() {
-        CreateAccountCommand cmd = new CreateAccountCommand(
+        AccountCreateCommand cmd = new AccountCreateCommand(
                 99L, "New Account", AccountType.CASH, Currency.EUR, "My Bank"
         );
 
@@ -144,7 +144,7 @@ public class AccountServiceTests {
 
     @Test
     void createAccount_Should_saveAndReturnResult_When_valid() {
-        CreateAccountCommand cmd = new CreateAccountCommand(
+        AccountCreateCommand cmd = new AccountCreateCommand(
                 99L, "New Account", AccountType.CASH, Currency.EUR, "My Bank"
         );
 

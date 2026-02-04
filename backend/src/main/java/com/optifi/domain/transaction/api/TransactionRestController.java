@@ -1,5 +1,6 @@
 package com.optifi.domain.transaction.api;
 
+import com.optifi.domain.transaction.api.mapper.TransactionMapper;
 import com.optifi.domain.transaction.api.request.GetUserTransactionsRequestDto;
 import com.optifi.domain.transaction.api.request.TransactionCreateRequestDto;
 import com.optifi.domain.transaction.api.request.TransactionUpdateRequestDto;
@@ -36,6 +37,7 @@ import java.net.URI;
 public class TransactionRestController {
 
     private final TransactionService transactionService;
+    private final TransactionMapper mapper;
 
     @GetMapping
     public ResponseEntity<Page<TransactionSummaryResponseDto>> getAllTransactions(
@@ -59,7 +61,7 @@ public class TransactionRestController {
     ) {
         TransactionReferenceCommand cmd = new TransactionReferenceCommand(userDetails.getId(), accountId, transactionId);
         TransactionDetailsResult result = transactionService.getTransaction(cmd);
-        TransactionDetailsResponseDto responseDto = TransactionDetailsResponseDto.fromResult(result);
+        TransactionDetailsResponseDto responseDto = mapper.toDetailsResponseDto(result);
         return ResponseEntity.ok(responseDto);
     }
 
@@ -71,7 +73,7 @@ public class TransactionRestController {
     ) {
         TransactionCreateCommand cmd = dto.toCreateCommand(userDetails.getId(), accountId);
         TransactionDetailsResult result = transactionService.createTransaction(cmd);
-        TransactionDetailsResponseDto responseDto = TransactionDetailsResponseDto.fromResult(result);
+        TransactionDetailsResponseDto responseDto = mapper.toDetailsResponseDto(result);
         return ResponseEntity
                 .created(URI.create("/api/accounts/" + accountId + "/transactions/" + responseDto.id()))
                 .body(responseDto);

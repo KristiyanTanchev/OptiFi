@@ -1,6 +1,5 @@
 package com.optifi.domain.category.api.request;
 
-import com.optifi.domain.category.application.command.CategoryUpdateCommand;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -14,7 +13,4 @@ public record CategoryUpdateRequestDto(
         @NotNull @Size(min = 1, max = 255, message = "Category icon must be between 1 and 255 characters")
         String icon
 ) {
-    public CategoryUpdateCommand toUpdateCommand(Long userId, Long categoryId) {
-        return new CategoryUpdateCommand(userId, categoryId, name, description, icon);
-    }
 }

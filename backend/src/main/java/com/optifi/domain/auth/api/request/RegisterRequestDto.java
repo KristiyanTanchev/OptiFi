@@ -17,5 +17,4 @@ public record RegisterRequestDto(
         @Email(message = "Email format is incorrect")
         String email
 ) {
-
 }

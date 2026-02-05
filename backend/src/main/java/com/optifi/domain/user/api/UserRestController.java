@@ -1,7 +1,9 @@
 package com.optifi.domain.user.api;
 
+import com.optifi.config.web.CurrentUser;
+import com.optifi.domain.shared.UserContext;
+import com.optifi.domain.user.api.mapper.UserMapper;
 import com.optifi.domain.user.application.command.*;
-import com.optifi.security.CustomUserDetails;
 import com.optifi.domain.user.application.UserService;
 import com.optifi.domain.user.application.result.UserDetailsResult;
 import com.optifi.domain.user.application.result.UserSummaryResult;
@@ -16,7 +18,6 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,12 +28,13 @@ import java.util.List;
 public class UserRestController {
 
     private final UserService userService;
+    private final UserMapper mapper;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<List<UserSummaryResponseDto>> getUsers() {
         List<UserSummaryResult> users = userService.getAllUsers();
-        List<UserSummaryResponseDto> userDtos = users.stream().map(UserSummaryResponseDto::fromResult).toList();
+        List<UserSummaryResponseDto> userDtos = users.stream().map(mapper::toSummaryDto).toList();
         return ResponseEntity.ok(userDtos);
     }
 
@@ -41,7 +43,7 @@ public class UserRestController {
     public ResponseEntity<UserDetailsResponseDto> getUser(
             @PathVariable @NotNull @Positive Long id) {
         UserDetailsResult userDetailsResult = userService.getUser(id);
-        UserDetailsResponseDto userDetailsResponseDto = UserDetailsResponseDto.fromResult(userDetailsResult);
+        UserDetailsResponseDto userDetailsResponseDto = mapper.toDetailsDto(userDetailsResult);
         return ResponseEntity.ok(userDetailsResponseDto);
     }
 
@@ -49,9 +51,9 @@ public class UserRestController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> promoteToAdmin(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails principal
+            @CurrentUser UserContext ctx
     ) {
-        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(id, principal.getId(), RoleChangeAction.PROMOTE_TO_ADMIN);
+        ChangeUserRoleCommand cmd = mapper.toChangeUserRoleCommand(id, RoleChangeAction.PROMOTE_TO_ADMIN, ctx);
         userService.changeUserRole(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -60,10 +62,9 @@ public class UserRestController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> promoteToModerator(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails principal
+            @CurrentUser UserContext ctx
     ) {
-        ChangeUserRoleCommand cmd =
-                new ChangeUserRoleCommand(id, principal.getId(), RoleChangeAction.PROMOTE_TO_MODERATOR);
+        ChangeUserRoleCommand cmd = mapper.toChangeUserRoleCommand(id, RoleChangeAction.PROMOTE_TO_MODERATOR, ctx);
         userService.changeUserRole(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -72,9 +73,9 @@ public class UserRestController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> demoteToUser(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails principal
+            @CurrentUser UserContext ctx
     ) {
-        ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(id, principal.getId(), RoleChangeAction.DEMOTE_TO_USER);
+        ChangeUserRoleCommand cmd = mapper.toChangeUserRoleCommand(id, RoleChangeAction.DEMOTE_TO_USER, ctx);
         userService.changeUserRole(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -83,9 +84,9 @@ public class UserRestController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Void> banUser(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails principal
+            @CurrentUser UserContext ctx
     ) {
-        BanUserCommand cmd = new BanUserCommand(id, principal.getId());
+        BanUserCommand cmd = mapper.toBanUserCommand(id, ctx);
         userService.banUser(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -94,9 +95,9 @@ public class UserRestController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Void> unbanUser(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails principal
+            @CurrentUser UserContext ctx
     ) {
-        UnbanUserCommand cmd = new UnbanUserCommand(id, principal.getId());
+        UnbanUserCommand cmd = mapper.toUnbanUserCommand(id, ctx);
         userService.unbanUser(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -105,30 +106,29 @@ public class UserRestController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Void> deleteUser(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails principal) {
-        userService.deleteUser(id, principal.getId());
+            @CurrentUser UserContext ctx
+    ) {
+        userService.deleteUser(id, ctx.userId());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserDetailsResponseDto> getOwnUser(
-            @AuthenticationPrincipal CustomUserDetails principal
+            @CurrentUser UserContext ctx
     ) {
-        UserDetailsResult userDetailsResult = userService.getUser(principal.getId());
-        UserDetailsResponseDto userDetailsResponseDto = UserDetailsResponseDto.fromResult(userDetailsResult);
+        UserDetailsResult userDetailsResult = userService.getUser(ctx.userId());
+        UserDetailsResponseDto userDetailsResponseDto = mapper.toDetailsDto(userDetailsResult);
         return ResponseEntity.ok(userDetailsResponseDto);
     }
 
     @PutMapping("/me/password")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> changePassword(
-            @AuthenticationPrincipal CustomUserDetails principal,
-            @Valid @RequestBody ChangePasswordRequestDto changePasswordRequestDto) {
-        ChangePasswordCommand cmd = new ChangePasswordCommand(
-                principal.getId(),
-                changePasswordRequestDto.oldPassword(),
-                changePasswordRequestDto.newPassword());
+            @Valid @RequestBody ChangePasswordRequestDto dto,
+            @CurrentUser UserContext ctx
+    ) {
+        ChangePasswordCommand cmd = mapper.toChangePasswordCommand(dto, ctx);
         userService.changePassword(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -136,9 +136,9 @@ public class UserRestController {
     @PutMapping("/me/email")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> changeEmail(
-            @AuthenticationPrincipal CustomUserDetails principal,
-            @Valid @RequestBody ChangeEmailRequestDto changeEmailRequestDto) {
-        ChangeEmailCommand cmd = new ChangeEmailCommand(principal.getId(), changeEmailRequestDto.email());
+            @Valid @RequestBody ChangeEmailRequestDto changeEmailRequestDto,
+            @CurrentUser UserContext ctx) {
+        ChangeEmailCommand cmd = mapper.toChangeEmailCommand(changeEmailRequestDto, ctx);
         userService.changeEmail(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -146,9 +146,9 @@ public class UserRestController {
     @PutMapping("/me/preferences")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> changePreferences(
-            @AuthenticationPrincipal CustomUserDetails principal,
-            @Valid @RequestBody UserPreferencesUpdateRequestDto dto) {
-        SetUserPreferenceCommand cmd = new SetUserPreferenceCommand(principal.getId(), dto.currency(), dto.locale());
+            @Valid @RequestBody UserPreferencesUpdateRequestDto dto,
+            @CurrentUser UserContext ctx) {
+        SetUserPreferenceCommand cmd = mapper.toSetUserPreferenceCommand(dto, ctx);
         userService.setPreferences(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -156,8 +156,8 @@ public class UserRestController {
     @DeleteMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteUser(
-            @AuthenticationPrincipal CustomUserDetails principal) {
-        userService.deleteUser(principal.getId(), principal.getId());
+            @CurrentUser UserContext ctx) {
+        userService.deleteUser(ctx.userId(), ctx.userId());
         return ResponseEntity.noContent().build();
     }
 }

@@ -12,7 +12,7 @@ public record TransactionSummaryResult(
         Instant occurredAt,
         BigDecimal amount,
         String description,
-        CategorySummaryResult categoryName
+        CategorySummaryResult category
 ) {
     public static TransactionSummaryResult fromEntity(Transaction tx) {
         return new TransactionSummaryResult(

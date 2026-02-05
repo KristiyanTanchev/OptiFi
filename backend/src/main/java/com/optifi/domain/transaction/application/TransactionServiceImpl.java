@@ -49,7 +49,13 @@ public class TransactionServiceImpl implements TransactionService {
         Account account = loadAccountAuthorized(cmd.accountId(), cmd.userId());
         Category category = categoryRepository.findByIdAndUserId(cmd.categoryId(), cmd.userId())
                 .orElseThrow(() -> new EntityNotFoundException("category", cmd.categoryId()));
-        Transaction transaction = cmd.toEntity(account, category);
+        Transaction transaction = Transaction.builder()
+                .account(account)
+                .category(category)
+                .amount(cmd.amount())
+                .description(cmd.description())
+                .occurredAt(cmd.occurredAt())
+                .build();
         Transaction savedTransaction = transactionRepository.save(transaction);
         return TransactionDetailsResult.fromEntity(savedTransaction);
     }

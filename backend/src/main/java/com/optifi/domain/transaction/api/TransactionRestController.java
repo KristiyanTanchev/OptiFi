@@ -1,5 +1,7 @@
 package com.optifi.domain.transaction.api;
 
+import com.optifi.config.web.CurrentUser;
+import com.optifi.domain.shared.UserContext;
 import com.optifi.domain.transaction.api.mapper.TransactionMapper;
 import com.optifi.domain.transaction.api.request.GetUserTransactionsRequestDto;
 import com.optifi.domain.transaction.api.request.TransactionCreateRequestDto;
@@ -13,7 +15,6 @@ import com.optifi.domain.transaction.application.command.*;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
 import com.optifi.domain.transaction.application.result.TransactionGetSummaryResult;
 import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
-import com.optifi.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -24,7 +25,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -42,14 +42,14 @@ public class TransactionRestController {
     @GetMapping
     public ResponseEntity<Page<TransactionSummaryResponseDto>> getAllTransactions(
             @PathVariable @NotNull @Positive Long accountId,
-            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @ModelAttribute GetUserTransactionsRequestDto requestDto,
-            @PageableDefault(size = 20, sort = "occurredAt", direction = Sort.Direction.DESC)
-            Pageable pageable
+            @PageableDefault(size = 20, sort = "occurredAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @CurrentUser UserContext ctx
     ) {
-        TransactionQuery query = requestDto.toQuery(userDetails.getId(), accountId);
+        TransactionQuery query = mapper.toTransactionQuery(accountId, requestDto, ctx);
         Page<TransactionSummaryResult> result = transactionService.getAllUserTransactions(query, pageable);
-        Page<TransactionSummaryResponseDto> response = result.map(TransactionSummaryResponseDto::fromResult);
+        Page<TransactionSummaryResponseDto> response = result
+                .map((transaction) -> mapper.toSummaryDto(transaction, ctx));
         return ResponseEntity.ok(response);
     }
 
@@ -57,11 +57,11 @@ public class TransactionRestController {
     public ResponseEntity<TransactionDetailsResponseDto> getTransaction(
             @PathVariable @NotNull @Positive Long accountId,
             @PathVariable @NotNull @Positive Long transactionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        TransactionReferenceCommand cmd = new TransactionReferenceCommand(userDetails.getId(), accountId, transactionId);
+        TransactionReferenceCommand cmd = mapper.toReferenceCommand(accountId, transactionId, ctx);
         TransactionDetailsResult result = transactionService.getTransaction(cmd);
-        TransactionDetailsResponseDto responseDto = mapper.toDetailsResponseDto(result);
+        TransactionDetailsResponseDto responseDto = mapper.toDetailsDto(result, ctx);
         return ResponseEntity.ok(responseDto);
     }
 
@@ -69,11 +69,11 @@ public class TransactionRestController {
     public ResponseEntity<TransactionDetailsResponseDto> createTransaction(
             @PathVariable @NotNull @Positive Long accountId,
             @RequestBody @Valid TransactionCreateRequestDto dto,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        TransactionCreateCommand cmd = dto.toCreateCommand(userDetails.getId(), accountId);
+        TransactionCreateCommand cmd = mapper.toCreateCommand(accountId, dto, ctx);
         TransactionDetailsResult result = transactionService.createTransaction(cmd);
-        TransactionDetailsResponseDto responseDto = mapper.toDetailsResponseDto(result);
+        TransactionDetailsResponseDto responseDto = mapper.toDetailsDto(result, ctx);
         return ResponseEntity
                 .created(URI.create("/api/accounts/" + accountId + "/transactions/" + responseDto.id()))
                 .body(responseDto);
@@ -84,9 +84,9 @@ public class TransactionRestController {
             @PathVariable @NotNull @Positive Long accountId,
             @PathVariable @NotNull @Positive Long transactionId,
             @RequestBody @Valid TransactionUpdateRequestDto dto,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        TransactionUpdateCommand cmd = dto.toUpdateCommand(accountId, transactionId, userDetails.getId());
+        TransactionUpdateCommand cmd = mapper.toUpdateCommand(accountId, transactionId, dto, ctx);
         transactionService.updateTransaction(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -95,9 +95,9 @@ public class TransactionRestController {
     public ResponseEntity<Void> deleteTransaction(
             @PathVariable @NotNull @Positive Long accountId,
             @PathVariable @NotNull @Positive Long transactionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        TransactionReferenceCommand cmd = new TransactionReferenceCommand(userDetails.getId(), accountId, transactionId);
+        TransactionReferenceCommand cmd = mapper.toReferenceCommand(accountId, transactionId, ctx);
         transactionService.deleteTransaction(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -106,11 +106,11 @@ public class TransactionRestController {
     public ResponseEntity<TransactionGetSummaryResponseDto> getTransactionsSummary(
             @PathVariable @NotNull @Positive Long accountId,
             @Valid @ModelAttribute TransactionGetSummaryRequestDto dto,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        TransactionGetSummaryCommand cmd = dto.toCommand(userDetails.getId(), accountId);
+        TransactionGetSummaryCommand cmd = mapper.toGetSummaryCommand(accountId, dto, ctx);
         TransactionGetSummaryResult result = transactionService.getTransactionSummary(cmd);
-        TransactionGetSummaryResponseDto response = TransactionGetSummaryResponseDto.from(result);
+        TransactionGetSummaryResponseDto response = mapper.toGetSummaryDto(result, ctx);
         return ResponseEntity.ok(response);
     }
 }

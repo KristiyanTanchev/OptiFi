@@ -1,6 +1,5 @@
 package com.optifi.domain.category.api.response;
 
-import com.optifi.domain.transaction.api.response.TransactionSummaryResponseDto;
 import lombok.Builder;
 
 import java.time.OffsetDateTime;
@@ -12,7 +11,7 @@ public record CategoryDetailsResponseDto(
         String name,
         String description,
         String icon,
-        List<TransactionSummaryResponseDto> transactions,
+        List<CategoryTransactionSummaryResponseDto> transactions,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
         boolean canEdit,

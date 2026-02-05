@@ -4,17 +4,17 @@ import com.optifi.domain.category.api.response.CategorySummaryResponseDto;
 import lombok.Builder;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @Builder
 public record TransactionDetailsResponseDto(
         long id,
         long accountId,
-        Instant occurredAt,
+        OffsetDateTime occurredAt,
         BigDecimal amount,
         String description,
         CategorySummaryResponseDto category,
-        Instant createdAt,
-        Instant updatedAt
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt
 ) {
 }

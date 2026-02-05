@@ -1,18 +1,13 @@
 package com.optifi.domain.transaction.api.request;
 
-import com.optifi.domain.transaction.application.command.TransactionQuery;
-
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDate;
 
 public record GetUserTransactionsRequestDto(
-        Instant startDate,
-        Instant endDate,
+        LocalDate startDate,
+        LocalDate endDate,
         BigDecimal min,
         BigDecimal max,
         String description
 ) {
-    public TransactionQuery toQuery(Long userId, Long accountId) {
-        return new TransactionQuery(userId, accountId, startDate, endDate, min, max, description);
-    }
 }

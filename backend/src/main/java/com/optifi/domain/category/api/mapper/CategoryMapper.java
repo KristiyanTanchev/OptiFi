@@ -4,13 +4,14 @@ import com.optifi.domain.category.api.request.CategoryCreateRequestDto;
 import com.optifi.domain.category.api.request.CategoryUpdateRequestDto;
 import com.optifi.domain.category.api.response.CategoryDetailsResponseDto;
 import com.optifi.domain.category.api.response.CategorySummaryResponseDto;
+import com.optifi.domain.category.api.response.CategoryTransactionSummaryResponseDto;
 import com.optifi.domain.category.application.command.CategoryCreateCommand;
 import com.optifi.domain.category.application.command.CategoryUpdateCommand;
 import com.optifi.domain.category.application.result.CategoryDetailsResult;
 import com.optifi.domain.category.application.result.CategorySummaryResult;
 import com.optifi.domain.shared.TimeHelper;
 import com.optifi.domain.shared.UserContext;
-import com.optifi.domain.transaction.api.response.TransactionSummaryResponseDto;
+import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +26,9 @@ public class CategoryMapper {
                 .name(result.name())
                 .description(result.description())
                 .icon(result.icon())
-                .transactions(result.transactions().stream().map(TransactionSummaryResponseDto::fromResult).toList())
+                .transactions(result.transactions().stream()
+                        .map(t -> toTransactionSummaryResponseDto(t, ctx))
+                        .toList())
                 .createdAt(timeHelper.toOffsetDateTime(result.createdAt(), ctx.zoneId()))
                 .updatedAt(timeHelper.toOffsetDateTime(result.updatedAt(), ctx.zoneId()))
                 .canEdit(result.canEdit())
@@ -60,5 +63,15 @@ public class CategoryMapper {
                 .description(dto.description())
                 .icon(dto.icon())
                 .build();
+    }
+
+    private CategoryTransactionSummaryResponseDto toTransactionSummaryResponseDto(TransactionSummaryResult result, UserContext ctx) {
+        return CategoryTransactionSummaryResponseDto.builder()
+                .id(result.id())
+                .amount(result.amount())
+                .accountId(result.accountId())
+                .occurredAt(timeHelper.toOffsetDateTime(result.occurredAt(), ctx.zoneId()))
+                .build();
+
     }
 }

@@ -1,22 +1,23 @@
 package com.optifi.domain.account.api;
 
+import com.optifi.config.web.CurrentUser;
+import com.optifi.domain.account.api.mapper.AccountMapper;
 import com.optifi.domain.account.api.request.AccountCreateRequestDto;
 import com.optifi.domain.account.api.request.AccountUpdateRequestDto;
 import com.optifi.domain.account.api.response.AccountDetailsResponseDto;
 import com.optifi.domain.account.api.response.AccountSummaryResponseDto;
 import com.optifi.domain.account.application.AccountService;
 import com.optifi.domain.account.application.command.AccountUpdateCommand;
-import com.optifi.domain.account.application.command.CreateAccountCommand;
+import com.optifi.domain.account.application.command.AccountCreateCommand;
 import com.optifi.domain.account.application.result.AccountDetailsResult;
 import com.optifi.domain.account.application.result.AccountSummaryResult;
-import com.optifi.security.CustomUserDetails;
+import com.optifi.domain.shared.UserContext;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -28,34 +29,35 @@ import java.util.List;
 @PreAuthorize("isAuthenticated()")
 public class AccountRestController {
     private final AccountService accountService;
+    private final AccountMapper mapper;
 
     @GetMapping
     public ResponseEntity<List<AccountSummaryResponseDto>> getAllOwnAccounts(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        List<AccountSummaryResult> accounts = accountService.getAllUserAccounts(userDetails.getId());
-        List<AccountSummaryResponseDto> result = accounts.stream().map(AccountSummaryResponseDto::fromResult).toList();
+        List<AccountSummaryResult> accounts = accountService.getAllUserAccounts(ctx.userId());
+        List<AccountSummaryResponseDto> result = accounts.stream().map(mapper::toSummaryDto).toList();
         return ResponseEntity.ok(result);
     }
 
     @PostMapping
     public ResponseEntity<AccountDetailsResponseDto> createAccount(
             @Valid @RequestBody AccountCreateRequestDto dto,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        CreateAccountCommand cmd = dto.toCreateCommand(userDetails.getId());
+        AccountCreateCommand cmd = mapper.toCreateCommand(dto, ctx);
         AccountDetailsResult result = accountService.createAccount(cmd);
-        AccountDetailsResponseDto responseDto = AccountDetailsResponseDto.fromResult(result);
+        AccountDetailsResponseDto responseDto = mapper.toDetailsDto(result, ctx);
         return ResponseEntity.created(URI.create("/api/accounts/" + responseDto.id())).body(responseDto);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<AccountDetailsResponseDto> getAccountById(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        AccountDetailsResult result = accountService.getAccountById(id, userDetails.getId());
-        AccountDetailsResponseDto responseDto = AccountDetailsResponseDto.fromResult(result);
+        AccountDetailsResult result = accountService.getAccountById(id, ctx.userId());
+        AccountDetailsResponseDto responseDto = mapper.toDetailsDto(result, ctx);
         return ResponseEntity.ok(responseDto);
     }
 
@@ -63,9 +65,9 @@ public class AccountRestController {
     public ResponseEntity<Void> updateAccount(
             @PathVariable @NotNull @Positive Long id,
             @Valid @RequestBody AccountUpdateRequestDto dto,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        AccountUpdateCommand cmd = dto.toUpdateCommand(id, userDetails.getId());
+        AccountUpdateCommand cmd = mapper.toUpdateCommand(id, dto, ctx);
         accountService.updateAccount(cmd);
         return ResponseEntity.noContent().build();
     }
@@ -73,27 +75,27 @@ public class AccountRestController {
     @PutMapping("/{id}/archive")
     public ResponseEntity<Void> archiveAccount(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        accountService.archiveAccount(id, userDetails.getId());
+        accountService.archiveAccount(id, ctx.userId());
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/unarchive")
     public ResponseEntity<Void> unarchiveAccount(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        accountService.unarchiveAccount(id, userDetails.getId());
+        accountService.unarchiveAccount(id, ctx.userId());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAccount(
             @PathVariable @NotNull @Positive Long id,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser UserContext ctx
     ) {
-        accountService.deleteAccount(id, userDetails.getId());
+        accountService.deleteAccount(id, ctx.userId());
         return ResponseEntity.noContent().build();
     }
 }

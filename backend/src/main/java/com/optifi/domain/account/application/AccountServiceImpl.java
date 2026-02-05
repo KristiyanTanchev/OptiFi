@@ -1,7 +1,7 @@
 package com.optifi.domain.account.application;
 
 import com.optifi.domain.account.application.command.AccountUpdateCommand;
-import com.optifi.domain.account.application.command.CreateAccountCommand;
+import com.optifi.domain.account.application.command.AccountCreateCommand;
 import com.optifi.domain.account.application.result.AccountDetailsResult;
 import com.optifi.domain.account.model.Account;
 import com.optifi.domain.account.repository.AccountRepository;
@@ -37,7 +37,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountDetailsResult createAccount(CreateAccountCommand cmd) {
+    public AccountDetailsResult createAccount(AccountCreateCommand cmd) {
         User user = userRepository.findById(cmd.userId()).orElseThrow(
                 () -> new EntityNotFoundException("User", cmd.userId())
         );

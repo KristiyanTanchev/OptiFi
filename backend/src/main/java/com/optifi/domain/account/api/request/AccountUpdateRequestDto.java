@@ -1,6 +1,5 @@
 package com.optifi.domain.account.api.request;
 
-import com.optifi.domain.account.application.command.AccountUpdateCommand;
 import com.optifi.domain.shared.AccountType;
 import com.optifi.domain.shared.Currency;
 import jakarta.validation.constraints.NotNull;
@@ -19,8 +18,4 @@ public record AccountUpdateRequestDto(
 
         String institution
 ) {
-
-    public AccountUpdateCommand toUpdateCommand(long userId, long accountId) {
-        return new AccountUpdateCommand(accountId, userId, name, type, currency, institution);
-    }
 }

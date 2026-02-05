@@ -9,7 +9,6 @@ import com.optifi.domain.reporting.application.result.ReportTimeChartByPeriodRes
 import com.optifi.domain.reporting.application.result.ReportTimeChartResult;
 import com.optifi.domain.reporting.repository.ReportJdbcRepository;
 import com.optifi.domain.reporting.repository.aggregations.*;
-import com.optifi.domain.shared.Currency;
 import com.optifi.domain.shared.TimeBucket;
 import com.optifi.domain.shared.TimeHelper;
 import com.optifi.domain.shared.TransactionType;
@@ -27,7 +26,6 @@ import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,11 +98,6 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public ReportTimeChartResult getReportTimeChart(ReportTimeChartCommand cmd) {
-        ZoneId zone = ZoneId.of("Europe/Sofia"); // TODO user timezone
-
-        Currency currency = userRepository.findById(cmd.userId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"))
-                .getBaseCurrency();
 
         validateTimeInterval(cmd.from(), cmd.to());
 
@@ -114,7 +107,7 @@ public class ReportServiceImpl implements ReportService {
         List<ReportTimeChartByPeriodResult> buckets = initializeInterval(
                 fromKey,
                 toKey,
-                cmd.bucket().toChronoUnit()
+                cmd.bucket()
         );
 
         Map<LocalDate, ReportTimeChartByPeriodResult> bucketByDate = new HashMap<>();
@@ -123,8 +116,8 @@ public class ReportServiceImpl implements ReportService {
             bucketByDate.put(b.getDate(), b);
         }
 
-        Instant start = timeHelper.startOfDay(cmd.from(), zone);
-        Instant endExclusive = timeHelper.startOfNextDay(cmd.to(), zone);
+        Instant start = timeHelper.startOfDay(cmd.from(), cmd.zoneId());
+        Instant endExclusive = timeHelper.startOfNextDay(cmd.to(), cmd.zoneId());
 
         List<TransactionTimeAndAmount> transactions = switch (cmd.type()) {
             case INCOME -> transactionRepository
@@ -139,7 +132,7 @@ public class ReportServiceImpl implements ReportService {
         };
 
         for (TransactionTimeAndAmount tx : transactions) {
-            LocalDate txDate = timeHelper.toLocalDate(tx.getOccurredAt(), zone);
+            LocalDate txDate = timeHelper.toLocalDate(tx.getOccurredAt(), cmd.zoneId());
             LocalDate key = normalizeToBucketStart(txDate, cmd.bucket());
 
             ReportTimeChartByPeriodResult bucket = bucketByDate.get(key);
@@ -152,7 +145,7 @@ public class ReportServiceImpl implements ReportService {
             bucket.setAmount(bucket.getAmount().add(value));
         }
 
-        return new ReportTimeChartResult(cmd.bucket(), cmd.type(), currency, buckets);
+        return new ReportTimeChartResult(cmd.bucket(), cmd.type(), cmd.baseCurrency(), buckets);
     }
 
     private LocalDate normalizeToBucketStart(LocalDate date, TimeBucket bucket) {
@@ -176,14 +169,19 @@ public class ReportServiceImpl implements ReportService {
     private List<ReportTimeChartByPeriodResult> initializeInterval(
             LocalDate start,
             LocalDate end,
-            ChronoUnit unit
+            TimeBucket bucket
     ) {
-        long steps = unit.between(start, end) + 1;
+        long steps = switch (bucket) {
+            case DAY -> ChronoUnit.DAYS.between(start, end) + 1;
+            case WEEK -> ChronoUnit.WEEKS.between(start, end) + 1;
+            case MONTH -> ChronoUnit.MONTHS.between(start, end) + 1;
+            case YEAR -> ChronoUnit.YEARS.between(start, end) + 1;
+        };
 
         if (steps < ReportServiceImpl.MIN_INTERVAL || steps > ReportServiceImpl.MAX_INTERVAL) {
             throw new InvalidDateException(String.format(
                     "Interval must be between %d and %d %s.",
-                    ReportServiceImpl.MIN_INTERVAL, ReportServiceImpl.MAX_INTERVAL, unit.toString().toLowerCase()
+                    ReportServiceImpl.MIN_INTERVAL, ReportServiceImpl.MAX_INTERVAL, bucket.name().toLowerCase()
             ));
         }
 
@@ -192,7 +190,12 @@ public class ReportServiceImpl implements ReportService {
 
         for (int i = 0; i < steps; i++) {
             result.add(new ReportTimeChartByPeriodResult(cursor, BigDecimal.ZERO));
-            cursor = cursor.plus(1, unit);
+            cursor = switch (bucket) {
+                case DAY -> cursor.plusDays(1);
+                case WEEK -> cursor.plusWeeks(1);
+                case MONTH -> cursor.plusMonths(1);
+                case YEAR -> cursor.plusYears(1);
+            };
         }
 
         return result;

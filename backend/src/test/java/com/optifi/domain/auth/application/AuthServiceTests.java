@@ -3,6 +3,7 @@ package com.optifi.domain.auth.application;
 import com.optifi.domain.auth.application.command.LoginCommand;
 import com.optifi.domain.auth.application.command.RegisterUserCommand;
 import com.optifi.domain.auth.application.result.LoginResult;
+import com.optifi.domain.shared.Currency;
 import com.optifi.domain.user.application.UserService;
 import com.optifi.domain.shared.Role;
 import com.optifi.security.CustomUserDetails;
@@ -17,6 +18,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,7 +56,9 @@ public class AuthServiceTests {
                 true,
                 List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
                 1,
-                Role.ADMIN
+                Role.ADMIN,
+                Currency.USD,
+                ZoneId.of("Europe/Sofia")
         );
 
         when(authentication.getPrincipal()).thenReturn(userDetails);

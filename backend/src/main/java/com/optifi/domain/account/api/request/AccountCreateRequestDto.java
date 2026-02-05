@@ -1,6 +1,5 @@
 package com.optifi.domain.account.api.request;
 
-import com.optifi.domain.account.application.command.CreateAccountCommand;
 import com.optifi.domain.shared.AccountType;
 import com.optifi.domain.shared.Currency;
 import jakarta.validation.constraints.NotNull;
@@ -18,8 +17,4 @@ public record AccountCreateRequestDto(
         Currency currency,
 
         String institution) {
-
-    public CreateAccountCommand toCreateCommand(long userId) {
-        return new CreateAccountCommand(userId, name, type, currency, institution);
-    }
 }

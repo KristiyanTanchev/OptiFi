@@ -15,7 +15,8 @@ public record UserDetailsResult(
         String email,
         List<AccountSummaryResult> accounts,
         Currency baseCurrency,
-        SupportedLocale locale
+        SupportedLocale locale,
+        String timezone
 ) {
     public static UserDetailsResult fromEntity(User user) {
         return new UserDetailsResult(
@@ -25,7 +26,8 @@ public record UserDetailsResult(
                 user.getEmail(),
                 user.getAccounts().stream().map(AccountSummaryResult::fromEntity).toList(),
                 user.getBaseCurrency(),
-                user.getLocale()
+                user.getLocale(),
+                user.getTimeZoneId()
         );
     }
 }

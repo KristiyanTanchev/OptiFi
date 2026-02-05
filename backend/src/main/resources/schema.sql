@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users
     email         varchar(100)                                                       not null,
     base_currency enum ('EUR', 'USD')                                                not null,
     locale        enum ('BG_BG', 'EN_GB', 'EN_US')                                   not null,
+    time_zone_id  varchar(64)                                                        not null DEFAULT 'Europe/Sofia',
     role          enum ('ADMIN', 'BLOCKED', 'MODERATOR', 'USER', 'WAITING_APPROVAL') null,
     created_at    datetime(6)                                                        not null,
     updated_at    datetime(6)                                                        null,

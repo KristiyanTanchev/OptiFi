@@ -18,6 +18,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,7 +57,8 @@ public class AuthServiceTests {
                 List.of(new SimpleGrantedAuthority("ROLE_ADMIN")),
                 1,
                 Role.ADMIN,
-                Currency.USD
+                Currency.USD,
+                ZoneId.of("Europe/Sofia")
         );
 
         when(authentication.getPrincipal()).thenReturn(userDetails);

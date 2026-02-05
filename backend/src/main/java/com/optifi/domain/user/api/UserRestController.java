@@ -39,7 +39,7 @@ public class UserRestController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR') or #id == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<UserDetailsResponseDto> getUser(
             @PathVariable @NotNull @Positive Long id) {
         UserDetailsResult userDetailsResult = userService.getUser(id);

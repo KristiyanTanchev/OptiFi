@@ -9,6 +9,7 @@ import com.optifi.domain.reporting.application.command.ReportSummaryCommand;
 import com.optifi.domain.reporting.application.command.ReportTimeChartCommand;
 import com.optifi.domain.reporting.application.result.*;
 import com.optifi.domain.shared.TimeHelper;
+import com.optifi.domain.shared.TransactionType;
 import com.optifi.domain.shared.UserContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,7 @@ public class ReportingMapper {
                 .userId(ctx.userId())
                 .from(timeHelper.startOfDay(dto.from(), ctx.zoneId()))
                 .to(timeHelper.startOfNextDay(dto.to(), ctx.zoneId()))
-                .type(dto.type())
+                .type(dto.type() != null ? dto.type() : TransactionType.ANY)
                 .limit(dto.limit())
                 .build();
     }

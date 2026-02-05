@@ -1,15 +1,13 @@
 package com.optifi.domain.shared;
 
-import com.optifi.security.CustomUserDetails;
+import lombok.Builder;
 
 import java.time.ZoneId;
 
+@Builder
 public record UserContext(
         long userId,
         ZoneId zoneId,
         Currency currency
 ) {
-    public static UserContext from(CustomUserDetails principal) {
-        return new UserContext(principal.getId(), principal.getZoneId(), principal.getCurrency());
-    }
 }

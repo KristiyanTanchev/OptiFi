@@ -1,14 +1,28 @@
 package com.optifi.domain.shared;
 
 
-public enum AccountType {
-    CASH, BANK;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.optifi.exceptions.EnumParsingError;
 
-    @Override
-    public String toString() {
-        return switch (this) {
-            case CASH -> "Cash";
-            case BANK -> "Bank";
-        };
+import java.util.Arrays;
+
+public enum AccountType {
+    CASH("cash"),
+    BANK("bank");
+
+    private final String value;
+
+    AccountType(String value) { this.value = value; }
+
+    @JsonValue
+    public String value() { return value; }
+
+    @JsonCreator
+    public static AccountType from(String v) {
+        return Arrays.stream(values())
+                .filter(x -> x.value.equalsIgnoreCase(v))
+                .findFirst()
+                .orElseThrow(() -> new EnumParsingError("accountType", "Unsupported accountType: " + v));
     }
 }

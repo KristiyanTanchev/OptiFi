@@ -12,6 +12,7 @@ public record UserDetailsResponseDto(
         String email,
         Role role,
         Currency currency,
-        SupportedLocale locale
+        SupportedLocale locale,
+        String timezone
 ) {
 }

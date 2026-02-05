@@ -318,7 +318,8 @@ public class UserServiceTests {
                         new SetUserPreferenceCommand(
                                 1L,
                                 Currency.values()[0],
-                                SupportedLocale.values()[0]
+                                SupportedLocale.values()[0],
+                                "Europe/Sofia"
                         )
                 )
         );
@@ -333,7 +334,8 @@ public class UserServiceTests {
                 new SetUserPreferenceCommand(
                         1L,
                         Currency.USD,
-                        SupportedLocale.BG_BG
+                        SupportedLocale.BG_BG,
+                        "Europe/Sofia"
                 )
         );
         assertEquals(Currency.USD, user.getBaseCurrency());

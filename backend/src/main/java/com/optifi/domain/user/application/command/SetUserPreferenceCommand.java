@@ -8,6 +8,7 @@ import lombok.Builder;
 public record SetUserPreferenceCommand(
         Long userId,
         Currency baseCurrency,
-        SupportedLocale locale
+        SupportedLocale locale,
+        String timezone
 ) {
 }

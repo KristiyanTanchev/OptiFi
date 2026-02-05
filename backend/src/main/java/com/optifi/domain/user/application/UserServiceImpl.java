@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 
@@ -104,8 +106,16 @@ public class UserServiceImpl implements UserService {
     public void setPreferences(SetUserPreferenceCommand cmd) {
         User user = userRepository.findById(cmd.userId())
                 .orElseThrow(() -> new EntityNotFoundException("User", cmd.userId()));
+
+        ZoneId zoneId;
+        try {
+            zoneId = ZoneId.of(cmd.timezone());
+        } catch (DateTimeException e) {
+            throw new InvalidTimeZoneException("Time zone not supported");
+        }
         user.setBaseCurrency(cmd.baseCurrency());
         user.setLocale(cmd.locale());
+        user.setTimeZoneId(zoneId.getId());
     }
 
     @Override

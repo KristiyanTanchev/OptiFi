@@ -23,6 +23,7 @@ public class UserMapper {
                 .locale(result.locale())
                 .email(result.email())
                 .role(result.role())
+                .timezone(result.timezone())
                 .build();
     }
 
@@ -76,6 +77,7 @@ public class UserMapper {
                 .userId(ctx.userId())
                 .locale(dto.locale())
                 .baseCurrency(dto.currency())
+                .timezone(dto.timezone())
                 .build();
     }
 }

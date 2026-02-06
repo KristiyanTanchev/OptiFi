@@ -1,5 +1,6 @@
 package com.optifi.domain.user.application;
 
+import com.optifi.config.AppDefaults;
 import com.optifi.domain.shared.Currency;
 import com.optifi.domain.user.application.command.*;
 import com.optifi.domain.shared.SupportedLocale;
@@ -28,6 +29,9 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTests {
+
+    @Mock
+    private AppDefaults appDefaults;
 
     @Mock
     private UserRepository userRepository;
@@ -136,6 +140,10 @@ public class UserServiceTests {
         when(passwordEncoder.encode("pass")).thenReturn("encoded-pass");
 
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        when(appDefaults.userCurrency()).thenReturn("eur");
+        when(appDefaults.userLocale()).thenReturn("bg-bg");
+        when(appDefaults.userTimezone()).thenReturn("europe/sofia");
 
         User saved = userService.createUser(
                 new RegisterUserCommand("john", "pass", ""),

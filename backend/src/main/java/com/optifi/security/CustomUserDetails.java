@@ -48,7 +48,9 @@ public class CustomUserDetails extends User {
         try {
             zoneId = ZoneId.of(user.getTimeZoneId());
         } catch (DateTimeException e) {
-            log.error("Invalid timezone: {}", user.getTimeZoneId());
+            log.warn("Invalid timezone: {}", user.getTimeZoneId());
+        } catch (NullPointerException e) {
+            log.warn("Timezone not set for user: {}", user.getId());
         }
 
         return new CustomUserDetails(

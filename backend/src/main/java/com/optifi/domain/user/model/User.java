@@ -89,6 +89,7 @@ public class User {
     private SupportedLocale locale = SupportedLocale.EN_US;
 
     @Column(name = "time_zone_id", nullable = false, length = 64)
+    @Builder.Default
     private String timeZoneId = "Europe/Sofia";
 
     @CreationTimestamp

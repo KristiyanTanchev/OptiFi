@@ -1,227 +1,328 @@
 /* ============================================================
-   OptiFI SEED ONLY (assumes schema already exists)
-   Seeds: users, accounts, categories, transactions + category assignment
-   Re-runnable: INSERT IGNORE + deletes only [seed] transactions
+   OptiFi SEED ONLY (PostgreSQL)
+   Assumes schema already exists (users, accounts, categories, transactions, budgets, budget_* tables)
+   Re-runnable:
+     - uses ON CONFLICT DO NOTHING for idempotent inserts
+     - deletes only [seed] transactions and [seed] budgets
    ============================================================ */
-
-USE optifi;
 
 -- ------------------------------------------------------------
 -- USERS
 -- ------------------------------------------------------------
-INSERT IGNORE INTO users (created_at, updated_at, username, email, password_hash, base_currency, locale, role)
-VALUES (NOW(6), NOW(6), 'admin', 'admin@optifi.test', '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K',
-        'EUR', 'EN_GB', 'ADMIN'),
-       (NOW(6), NOW(6), 'moderator', 'moderator@optifi.test',
-        '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'USD', 'EN_US', 'MODERATOR'),
-       (NOW(6), NOW(6), 'kristiyan', 'kristiyan@optifi.test',
-        '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'BG_BG', 'USER'),
-       (NOW(6), NOW(6), 'maria', 'maria@optifi.test', '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K',
-        'EUR', 'EN_GB', 'USER'),
-       (NOW(6), NOW(6), 'blocked', 'blocked@optifi.test',
-        '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'USD', 'EN_US', 'BLOCKED'),
-       (NOW(6), NOW(6), 'waiting', 'waiting@optifi.test',
-        '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'BG_BG', 'WAITING_APPROVAL');
+INSERT INTO public.users (
+    created_at, updated_at,
+    username, email,
+    auth_provider, provider_subject,
+    password_hash,
+    base_currency, locale, role,
+    time_zone_id
+)
+VALUES
+    (NOW(), NOW(), 'admin',     'admin@optifi.test',     'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'EN_US', 'ADMIN',          'Europe/Sofia'),
+    (NOW(), NOW(), 'moderator', 'moderator@optifi.test', 'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'USD', 'EN_US', 'MODERATOR',      'Europe/Sofia'),
+    (NOW(), NOW(), 'kristiyan', 'kristiyan@optifi.test', 'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'BG_BG', 'USER',           'Europe/Sofia'),
+    (NOW(), NOW(), 'maria',     'maria@optifi.test',     'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'EN_US', 'USER',           'Europe/Sofia'),
+    (NOW(), NOW(), 'blocked',   'blocked@optifi.test',   'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'USD', 'EN_US', 'BLOCKED',        'Europe/Sofia'),
+    (NOW(), NOW(), 'waiting',   'waiting@optifi.test',   'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'BG_BG', 'WAITING_APPROVAL','Europe/Sofia')
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO public.users (
+    created_at, updated_at,
+    username, email,
+    auth_provider, provider_subject,
+    password_hash,
+    base_currency, locale, role,
+    time_zone_id
+)
+SELECT created_at, updated_at, username, email, auth_provider, provider_subject, password_hash, base_currency, locale, role, time_zone_id
+FROM (VALUES
+          (NOW(), NOW(), 'admin',     'admin@optifi.test',     'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'EN_US', 'ADMIN',          'Europe/Sofia'),
+          (NOW(), NOW(), 'moderator', 'moderator@optifi.test', 'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'USD', 'EN_US', 'MODERATOR',      'Europe/Sofia'),
+          (NOW(), NOW(), 'kristiyan', 'kristiyan@optifi.test', 'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'BG_BG', 'USER',           'Europe/Sofia'),
+          (NOW(), NOW(), 'maria',     'maria@optifi.test',     'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'EN_US', 'USER',           'Europe/Sofia'),
+          (NOW(), NOW(), 'blocked',   'blocked@optifi.test',   'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'USD', 'EN_US', 'BLOCKED',        'Europe/Sofia'),
+          (NOW(), NOW(), 'waiting',   'waiting@optifi.test',   'LOCAL', NULL, '$2a$10$mVGkuNVpFOOxwrYX1hR7OefDyus.7h5kZw95DenpYtjG5/fI.uC9K', 'EUR', 'BG_BG', 'WAITING_APPROVAL','Europe/Sofia')
+     ) AS v(created_at, updated_at, username, email, auth_provider, provider_subject, password_hash, base_currency, locale, role, time_zone_id)
+ON CONFLICT (email) DO NOTHING;
 
 -- ------------------------------------------------------------
--- ACCOUNTS (unique(user_id, name) so INSERT IGNORE works)
+-- ACCOUNTS
 -- ------------------------------------------------------------
-INSERT IGNORE INTO accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
-SELECT 0, NOW(6), NOW(6), u.id, 'Main EUR', 'UniCredit', 'EUR', 'BANK'
-FROM users u WHERE u.username = 'admin';
+INSERT INTO public.accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
+SELECT FALSE, NOW(), NOW(), u.id, 'Main EUR', 'UniCredit', 'EUR', 'BANK'
+FROM public.users u
+WHERE u.username = 'admin'
+ON CONFLICT (user_id, name) DO NOTHING;
 
-INSERT IGNORE INTO accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
-SELECT 0, NOW(6), NOW(6), u.id, 'Cash', NULL, 'EUR', 'CASH'
-FROM users u WHERE u.username = 'admin';
+INSERT INTO public.accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
+SELECT FALSE, NOW(), NOW(), u.id, 'Cash', NULL, 'EUR', 'CASH'
+FROM public.users u
+WHERE u.username = 'admin'
+ON CONFLICT (user_id, name) DO NOTHING;
 
-INSERT IGNORE INTO accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
-SELECT 0, NOW(6), NOW(6), u.id, 'Revolut EUR', 'Revolut', 'EUR', 'BANK'
-FROM users u WHERE u.username = 'kristiyan';
+INSERT INTO public.accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
+SELECT FALSE, NOW(), NOW(), u.id, 'Revolut EUR', 'Revolut', 'EUR', 'BANK'
+FROM public.users u
+WHERE u.username = 'kristiyan'
+ON CONFLICT (user_id, name) DO NOTHING;
 
-INSERT IGNORE INTO accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
-SELECT 0, NOW(6), NOW(6), u.id, 'Wallet', NULL, 'EUR', 'CASH'
-FROM users u WHERE u.username = 'kristiyan';
+INSERT INTO public.accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
+SELECT FALSE, NOW(), NOW(), u.id, 'Wallet', NULL, 'EUR', 'CASH'
+FROM public.users u
+WHERE u.username = 'kristiyan'
+ON CONFLICT (user_id, name) DO NOTHING;
 
-INSERT IGNORE INTO accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
-SELECT 0, NOW(6), NOW(6), u.id, 'Salary USD', 'DSK', 'USD', 'BANK'
-FROM users u WHERE u.username = 'maria';
+INSERT INTO public.accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
+SELECT FALSE, NOW(), NOW(), u.id, 'Salary USD', 'DSK', 'USD', 'BANK'
+FROM public.users u
+WHERE u.username = 'maria'
+ON CONFLICT (user_id, name) DO NOTHING;
 
-INSERT IGNORE INTO accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
-SELECT 1, NOW(6), NOW(6), u.id, 'Old Cash', NULL, 'USD', 'CASH'
-FROM users u WHERE u.username = 'maria';
+INSERT INTO public.accounts (archived, created_at, updated_at, user_id, name, institution, currency, type)
+SELECT TRUE, NOW(), NOW(), u.id, 'Old Cash', NULL, 'USD', 'CASH'
+FROM public.users u
+WHERE u.username = 'maria'
+ON CONFLICT (user_id, name) DO NOTHING;
 
 -- ------------------------------------------------------------
 -- DEFAULT CATEGORIES (global: user_id IS NULL)
 -- ------------------------------------------------------------
-
-INSERT IGNORE INTO categories (name, description, icon, created_at, updated_at, user_id)
+INSERT INTO public.categories (name, description, icon, created_at, updated_at, user_id)
 VALUES
-    ('Food & drinks',           'Groceries, restaurants, coffee, takeout', 'restaurant',     NOW(6), NOW(6), NULL),
-    ('Shopping',                'Clothes, gadgets, household shopping',     'shopping_cart',  NOW(6), NOW(6), NULL),
-    ('Housing',                 'Rent, utilities, home services',           'home',           NOW(6), NOW(6), NULL),
-    ('Transportation',          'Public transport, taxi, commute',          'directions_bus', NOW(6), NOW(6), NULL),
-    ('Vehicle',                 'Fuel, maintenance, repairs, car costs',    'directions_car', NOW(6), NOW(6), NULL),
-    ('Life & Entertainment',    'Movies, fun, hobbies, events',             'movie',          NOW(6), NOW(6), NULL),
-    ('Communication, PC',       'Internet, phone, software, devices',       'computer',       NOW(6), NOW(6), NULL),
-    ('Financial expenses',      'Fees, charges, subscriptions, interest',   'receipt_long',   NOW(6), NOW(6), NULL),
-    ('Investments',             'Stocks, ETFs, crypto, investing',          'trending_up',    NOW(6), NOW(6), NULL),
-    ('Income',                  'Salary and other income',                  'attach_money',   NOW(6), NOW(6), NULL);
+    ('Food & drinks',           'Groceries, restaurants, coffee, takeout', 'restaurant',     NOW(), NOW(), NULL),
+    ('Shopping',                'Clothes, gadgets, household shopping',     'shopping_cart',  NOW(), NOW(), NULL),
+    ('Housing',                 'Rent, utilities, home services',           'home',           NOW(), NOW(), NULL),
+    ('Transportation',          'Public transport, taxi, commute',          'directions_bus', NOW(), NOW(), NULL),
+    ('Vehicle',                 'Fuel, maintenance, repairs, car costs',    'directions_car', NOW(), NOW(), NULL),
+    ('Life & Entertainment',    'Movies, fun, hobbies, events',             'movie',          NOW(), NOW(), NULL),
+    ('Communication, PC',       'Internet, phone, software, devices',       'computer',       NOW(), NOW(), NULL),
+    ('Financial expenses',      'Fees, charges, subscriptions, interest',   'receipt_long',   NOW(), NOW(), NULL),
+    ('Investments',             'Stocks, ETFs, crypto, investing',          'trending_up',    NOW(), NOW(), NULL),
+    ('Income',                  'Salary and other income',                  'attach_money',   NOW(), NOW(), NULL)
+ON CONFLICT DO NOTHING;
 
 -- ------------------------------------------------------------
 -- TRANSACTIONS (re-runnable: delete only [seed] ones)
 -- ------------------------------------------------------------
-DELETE FROM transactions
+DELETE FROM public.transactions
 WHERE description LIKE '[seed] %';
 
--- Convenience: join global default categories once per insert
 -- kristiyan - Revolut EUR
-INSERT INTO transactions (amount, account_id, category_id, created_at, occurred_at, updated_at, description)
-SELECT t.amount,
-       a.id,
-       CASE
-           WHEN t.amount > 0 OR LOWER(t.description) LIKE '%salary%' THEN c_income.id
-           WHEN LOWER(t.description) LIKE '%grocer%' OR LOWER(t.description) LIKE '%lidl%' THEN c_groceries.id
-           WHEN LOWER(t.description) LIKE '%netflix%' THEN c_subs.id
-           WHEN LOWER(t.description) LIKE '%utilit%' THEN c_bills.id
-           WHEN LOWER(t.description) LIKE '%coffee%' OR LOWER(t.description) LIKE '%dinner%' THEN c_eat.id
-           ELSE c_eat.id
-           END AS category_id,
-       NOW(6),
-       t.occurred_at,
-       NOW(6),
-       CONCAT('[seed] ', t.description)
-FROM accounts a
-         JOIN users u ON u.id = a.user_id
-         JOIN categories c_income    ON c_income.user_id IS NULL AND c_income.name = 'Income'
-         JOIN categories c_groceries ON c_groceries.user_id IS NULL AND c_groceries.name = 'Groceries'
-         JOIN categories c_subs      ON c_subs.user_id IS NULL AND c_subs.name = 'Subscriptions'
-         JOIN categories c_bills     ON c_bills.user_id IS NULL AND c_bills.name = 'Bills'
-         JOIN categories c_eat       ON c_eat.user_id IS NULL AND c_eat.name = 'Eating Out'
-         JOIN (
-    SELECT 2500.00 AS amount, (NOW(6) - INTERVAL 25 DAY) AS occurred_at, 'Salary' AS description
-    UNION ALL SELECT -55.40, (NOW(6) - INTERVAL 20 DAY), 'Groceries - Lidl'
-    UNION ALL SELECT -12.99, (NOW(6) - INTERVAL 18 DAY), 'Netflix'
-    UNION ALL SELECT -120.00, (NOW(6) - INTERVAL 14 DAY), 'Utilities'
-    UNION ALL SELECT -6.80,  (NOW(6) - INTERVAL 3 DAY),  'Coffee'
-    UNION ALL SELECT -34.50, (NOW(6) - INTERVAL 1 DAY),  'Dinner'
-) t
-WHERE u.username = 'kristiyan'
-  AND a.name = 'Revolut EUR';
+WITH
+    a AS (
+        SELECT acc.id
+        FROM public.accounts acc
+                 JOIN public.users u ON u.id = acc.user_id
+        WHERE u.username = 'kristiyan' AND acc.name = 'Revolut EUR'
+    ),
+    c_income AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Income'),
+    c_food   AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Food & drinks'),
+    c_bills  AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Housing'),
+    c_ent    AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Life & Entertainment'),
+    t(amount, occurred_at, description) AS (
+        VALUES
+            ( 2500.00::numeric(19,4), (NOW() - INTERVAL '25 days'), 'Salary'),
+            (  -55.40::numeric(19,4), (NOW() - INTERVAL '20 days'), 'Groceries - Lidl'),
+            (  -12.99::numeric(19,4), (NOW() - INTERVAL '18 days'), 'Netflix'),
+            ( -120.00::numeric(19,4), (NOW() - INTERVAL '14 days'), 'Utilities'),
+            (   -6.80::numeric(19,4), (NOW() - INTERVAL '3 days'),  'Coffee'),
+            (  -34.50::numeric(19,4), (NOW() - INTERVAL '1 day'),   'Dinner')
+    )
+INSERT INTO public.transactions (amount, account_id, category_id, created_at, occurred_at, updated_at, description)
+SELECT
+    t.amount,
+    (SELECT id FROM a),
+    CASE
+        WHEN t.amount > 0 OR POSITION('salary' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_income)
+        WHEN POSITION('lidl' IN LOWER(t.description)) > 0 OR POSITION('grocer' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_food)
+        WHEN POSITION('netflix' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_ent)
+        WHEN POSITION('utilit' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_bills)
+        WHEN POSITION('coffee' IN LOWER(t.description)) > 0 OR POSITION('dinner' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_food)
+        ELSE (SELECT id FROM c_food)
+        END,
+    NOW(),
+    t.occurred_at,
+    NOW(),
+    '[seed] ' || t.description
+FROM t;
 
 -- kristiyan - Wallet (cash)
-INSERT INTO transactions (amount, account_id, category_id, created_at, occurred_at, updated_at, description)
-SELECT t.amount,
-       a.id,
-       CASE
-           WHEN t.amount > 0 THEN c_income.id
-           WHEN LOWER(t.description) LIKE '%atm%' THEN c_bills.id
-           WHEN LOWER(t.description) LIKE '%snack%' THEN c_eat.id
-           WHEN LOWER(t.description) LIKE '%taxi%' THEN c_eat.id
-           ELSE c_eat.id
-           END AS category_id,
-       NOW(6),
-       t.occurred_at,
-       NOW(6),
-       CONCAT('[seed] ', t.description)
-FROM accounts a
-         JOIN users u ON u.id = a.user_id
-         JOIN categories c_income ON c_income.user_id IS NULL AND c_income.name = 'Income'
-         JOIN categories c_bills  ON c_bills.user_id IS NULL AND c_bills.name = 'Bills'
-         JOIN categories c_eat    ON c_eat.user_id IS NULL AND c_eat.name = 'Eating Out'
-         JOIN (
-    SELECT -10.00 AS amount, (NOW(6) - INTERVAL 7 DAY) AS occurred_at, 'Taxi (cash)' AS description
-    UNION ALL SELECT -22.30, (NOW(6) - INTERVAL 6 DAY), 'Snacks'
-    UNION ALL SELECT  50.00, (NOW(6) - INTERVAL 5 DAY), 'ATM withdrawal'
-) t
-WHERE u.username = 'kristiyan'
-  AND a.name = 'Wallet';
+WITH
+    a AS (
+        SELECT acc.id
+        FROM public.accounts acc
+                 JOIN public.users u ON u.id = acc.user_id
+        WHERE u.username = 'kristiyan' AND acc.name = 'Wallet'
+    ),
+    c_income AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Income'),
+    c_food   AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Food & drinks'),
+    c_trans  AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Transportation'),
+    t(amount, occurred_at, description) AS (
+        VALUES
+            ( -10.00::numeric(19,4), (NOW() - INTERVAL '7 days'), 'Taxi (cash)'),
+            ( -22.30::numeric(19,4), (NOW() - INTERVAL '6 days'), 'Snacks'),
+            (  50.00::numeric(19,4), (NOW() - INTERVAL '5 days'), 'ATM withdrawal')
+    )
+INSERT INTO public.transactions (amount, account_id, category_id, created_at, occurred_at, updated_at, description)
+SELECT
+    t.amount,
+    (SELECT id FROM a),
+    CASE
+        WHEN t.amount > 0 THEN (SELECT id FROM c_income)
+        WHEN POSITION('atm' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_trans)
+        WHEN POSITION('taxi' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_trans)
+        ELSE (SELECT id FROM c_food)
+        END,
+    NOW(),
+    t.occurred_at,
+    NOW(),
+    '[seed] ' || t.description
+FROM t;
 
 -- maria - Salary USD
-INSERT INTO transactions (amount, account_id, category_id, created_at, occurred_at, updated_at, description)
-SELECT t.amount,
-       a.id,
-       CASE
-           WHEN t.amount > 0 OR LOWER(t.description) LIKE '%salary%' THEN c_income.id
-           WHEN LOWER(t.description) LIKE '%grocer%' THEN c_groceries.id
-           WHEN LOWER(t.description) LIKE '%spotify%' THEN c_subs.id
-           WHEN LOWER(t.description) LIKE '%rent%' THEN c_bills.id
-           ELSE c_bills.id
-           END AS category_id,
-       NOW(6),
-       t.occurred_at,
-       NOW(6),
-       CONCAT('[seed] ', t.description)
-FROM accounts a
-         JOIN users u ON u.id = a.user_id
-         JOIN categories c_income    ON c_income.user_id IS NULL AND c_income.name = 'Income'
-         JOIN categories c_groceries ON c_groceries.user_id IS NULL AND c_groceries.name = 'Groceries'
-         JOIN categories c_subs      ON c_subs.user_id IS NULL AND c_subs.name = 'Subscriptions'
-         JOIN categories c_bills     ON c_bills.user_id IS NULL AND c_bills.name = 'Bills'
-         JOIN (
-    SELECT 3200.00 AS amount, (NOW(6) - INTERVAL 28 DAY) AS occurred_at, 'Monthly salary' AS description
-    UNION ALL SELECT -800.00, (NOW(6) - INTERVAL 16 DAY), 'Rent'
-    UNION ALL SELECT -65.10,  (NOW(6) - INTERVAL 9 DAY),  'Groceries'
-    UNION ALL SELECT -19.99,  (NOW(6) - INTERVAL 2 DAY),  'Spotify'
-) t
-WHERE u.username = 'maria'
-  AND a.name = 'Salary USD';
+WITH
+    a AS (
+        SELECT acc.id
+        FROM public.accounts acc
+                 JOIN public.users u ON u.id = acc.user_id
+        WHERE u.username = 'maria' AND acc.name = 'Salary USD'
+    ),
+    c_income AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Income'),
+    c_food   AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Food & drinks'),
+    c_house  AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Housing'),
+    c_ent    AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Life & Entertainment'),
+    t(amount, occurred_at, description) AS (
+        VALUES
+            ( 3200.00::numeric(19,4), (NOW() - INTERVAL '28 days'), 'Monthly salary'),
+            ( -800.00::numeric(19,4), (NOW() - INTERVAL '16 days'), 'Rent'),
+            (  -65.10::numeric(19,4), (NOW() - INTERVAL '9 days'),  'Groceries'),
+            (  -19.99::numeric(19,4), (NOW() - INTERVAL '2 days'),  'Spotify')
+    )
+INSERT INTO public.transactions (amount, account_id, category_id, created_at, occurred_at, updated_at, description)
+SELECT
+    t.amount,
+    (SELECT id FROM a),
+    CASE
+        WHEN t.amount > 0 OR POSITION('salary' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_income)
+        WHEN POSITION('rent' IN LOWER(t.description)) > 0 OR POSITION('utilit' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_house)
+        WHEN POSITION('spotify' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_ent)
+        WHEN POSITION('grocer' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_food)
+        ELSE (SELECT id FROM c_house)
+        END,
+    NOW(),
+    t.occurred_at,
+    NOW(),
+    '[seed] ' || t.description
+FROM t;
 
 -- admin - Main EUR
-INSERT INTO transactions (amount, account_id, category_id, created_at, occurred_at, updated_at, description)
-SELECT t.amount,
-       a.id,
-       CASE
-           WHEN t.amount > 0 OR LOWER(t.description) LIKE '%funding%' THEN c_income.id
-           WHEN LOWER(t.description) LIKE '%domain%' THEN c_bills.id
-           ELSE c_bills.id
-           END AS category_id,
-       NOW(6),
-       t.occurred_at,
-       NOW(6),
-       CONCAT('[seed] ', t.description)
-FROM accounts a
-         JOIN users u ON u.id = a.user_id
-         JOIN categories c_income ON c_income.user_id IS NULL AND c_income.name = 'Income'
-         JOIN categories c_bills  ON c_bills.user_id IS NULL AND c_bills.name = 'Bills'
-         JOIN (
-    SELECT 10000.00 AS amount, (NOW(6) - INTERVAL 60 DAY) AS occurred_at, 'Initial funding' AS description
-    UNION ALL SELECT -99.00,  (NOW(6) - INTERVAL 10 DAY), 'Domain renewal'
-) t
-WHERE u.username = 'admin'
-  AND a.name = 'Main EUR';
+WITH
+    a AS (
+        SELECT acc.id
+        FROM public.accounts acc
+                 JOIN public.users u ON u.id = acc.user_id
+        WHERE u.username = 'admin' AND acc.name = 'Main EUR'
+    ),
+    c_income AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Income'),
+    c_house  AS (SELECT id FROM public.categories WHERE user_id IS NULL AND name = 'Housing'),
+    t(amount, occurred_at, description) AS (
+        VALUES
+            (10000.00::numeric(19,4), (NOW() - INTERVAL '60 days'), 'Initial funding'),
+            (  -99.00::numeric(19,4), (NOW() - INTERVAL '10 days'), 'Domain renewal')
+    )
+INSERT INTO public.transactions (amount, account_id, category_id, created_at, occurred_at, updated_at, description)
+SELECT
+    t.amount,
+    (SELECT id FROM a),
+    CASE
+        WHEN t.amount > 0 OR POSITION('funding' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_income)
+        WHEN POSITION('domain' IN LOWER(t.description)) > 0 THEN (SELECT id FROM c_house)
+        ELSE (SELECT id FROM c_house)
+        END,
+    NOW(),
+    t.occurred_at,
+    NOW(),
+    '[seed] ' || t.description
+FROM t;
 
 -- ------------------------------------------------------------
--- OPTIONAL: CATEGORY ASSIGNMENT (defensive, seed only)
+-- BUDGETS (new v1 tables)
 -- ------------------------------------------------------------
-UPDATE transactions t
-    JOIN categories c_income    ON c_income.user_id IS NULL AND c_income.name = 'Income'
-    JOIN categories c_groceries ON c_groceries.user_id IS NULL AND c_groceries.name = 'Groceries'
-    JOIN categories c_subs      ON c_subs.user_id IS NULL AND c_subs.name = 'Subscriptions'
-    JOIN categories c_bills     ON c_bills.user_id IS NULL AND c_bills.name = 'Bills'
-    JOIN categories c_eat       ON c_eat.user_id IS NULL AND c_eat.name = 'Eating Out'
-SET t.category_id =
-        CASE
-    WHEN t.amount > 0
-                OR LOWER(t.description) LIKE '%salary%'
-                OR LOWER(t.description) LIKE '%funding%'
-                THEN c_income.id
-            WHEN LOWER(t.description) LIKE '%grocer%'
-                OR LOWER(t.description) LIKE '%lidl%'
-                THEN c_groceries.id
-            WHEN LOWER(t.description) LIKE '%netflix%'
-                OR LOWER(t.description) LIKE '%spotify%'
-                THEN c_subs.id
-            WHEN LOWER(t.description) LIKE '%utilit%'
-                OR LOWER(t.description) LIKE '%rent%'
-                OR LOWER(t.description) LIKE '%domain%'
-                THEN c_bills.id
-            WHEN LOWER(t.description) LIKE '%coffee%'
-                OR LOWER(t.description) LIKE '%dinner%'
-                OR LOWER(t.description) LIKE '%snack%'
-                OR LOWER(t.description) LIKE '%restaurant%'
-                OR LOWER(t.description) LIKE '%taxi%'
-                THEN c_eat.id
-            ELSE c_eat.id
-END
-    WHERE t.description LIKE '[seed] %';
+DELETE FROM public.budget_categories bc
+    USING public.budgets b
+WHERE bc.budget_id = b.id
+  AND b.name LIKE '[seed] %';
 
+DELETE FROM public.budget_accounts ba
+    USING public.budgets b
+WHERE ba.budget_id = b.id
+  AND b.name LIKE '[seed] %';
+
+DELETE FROM public.budgets
+WHERE name LIKE '[seed] %';
+
+-- Create a couple of example budgets for kristiyan
+-- 1) Monthly "Food & drinks" budget on all accounts (no budget_accounts rows)
+INSERT INTO public.budgets (user_id, name, period, amount, currency, start_date, end_date, archived, created_at, updated_at)
+SELECT
+    u.id,
+    '[seed] Food monthly',
+    'MONTH',
+    300.00::numeric(19,4),
+    'EUR',
+    date_trunc('month', CURRENT_DATE)::date,
+    (date_trunc('month', CURRENT_DATE) + INTERVAL '1 month - 1 day')::date,
+    FALSE,
+    NOW(),
+    NOW()
+FROM public.users u
+WHERE u.username = 'kristiyan';
+
+INSERT INTO public.budget_categories (budget_id, category_id)
+SELECT
+    b.id,
+    c.id
+FROM public.budgets b
+         JOIN public.users u ON u.id = b.user_id
+         JOIN public.categories c ON c.user_id IS NULL AND c.name = 'Food & drinks'
+WHERE u.username = 'kristiyan'
+  AND b.name = '[seed] Food monthly'
+ON CONFLICT DO NOTHING;
+
+-- 2) Monthly "Housing" budget scoped to Revolut EUR account only
+INSERT INTO public.budgets (user_id, name, period, amount, currency, start_date, end_date, archived, created_at, updated_at)
+SELECT
+    u.id,
+    '[seed] Housing (Revolut) monthly',
+    'MONTH',
+    400.00::numeric(19,4),
+    'EUR',
+    date_trunc('month', CURRENT_DATE)::date,
+    (date_trunc('month', CURRENT_DATE) + INTERVAL '1 month - 1 day')::date,
+    FALSE,
+    NOW(),
+    NOW()
+FROM public.users u
+WHERE u.username = 'kristiyan';
+
+INSERT INTO public.budget_categories (budget_id, category_id)
+SELECT
+    b.id,
+    c.id
+FROM public.budgets b
+         JOIN public.users u ON u.id = b.user_id
+         JOIN public.categories c ON c.user_id IS NULL AND c.name = 'Housing'
+WHERE u.username = 'kristiyan'
+  AND b.name = '[seed] Housing (Revolut) monthly'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.budget_accounts (budget_id, account_id)
+SELECT
+    b.id,
+    a.id
+FROM public.budgets b
+         JOIN public.users u ON u.id = b.user_id
+         JOIN public.accounts a ON a.user_id = u.id AND a.name = 'Revolut EUR'
+WHERE u.username = 'kristiyan'
+  AND b.name = '[seed] Housing (Revolut) monthly'
+ON CONFLICT DO NOTHING;

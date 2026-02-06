@@ -1,6 +1,9 @@
 package com.optifi.domain.user.application;
 
+import com.optifi.config.AppDefaults;
 import com.optifi.domain.auth.application.command.RegisterUserCommand;
+import com.optifi.domain.shared.Currency;
+import com.optifi.domain.shared.SupportedLocale;
 import com.optifi.domain.user.application.command.*;
 import com.optifi.exceptions.*;
 import com.optifi.domain.user.model.User;
@@ -26,6 +29,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AppDefaults appDefaults;
 
     @Override
     @Transactional(readOnly = true)
@@ -58,6 +62,9 @@ public class UserServiceImpl implements UserService {
                 .email(cmd.email())
                 .authProvider("LOCAL")
                 .role(role)
+                .baseCurrency(Currency.from(appDefaults.userCurrency()))
+                .locale(SupportedLocale.from(appDefaults.userLocale()))
+                .timeZoneId(appDefaults.userTimezone())
                 .build();
 
         return userRepository.save(user);

@@ -26,7 +26,8 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const {data: features} = useFeatures();
+    const { data: features, isLoading } = useFeatures();
+    const featuresReady = !isLoading && features !== undefined;
 
     const registrationEnabled = !!features?.registrationEnabled;
 
@@ -77,13 +78,14 @@ export default function LoginPage() {
                                     required
                                     fullWidth
                                 />
-                                <GoogleLoginButton/>
+                                {featuresReady && <GoogleLoginButton />}
 
                                 <Button type="submit" variant="contained" disabled={loading}>
                                     {loading ? "Signing in..." : "Sign in"}
                                 </Button>
 
-                                {registrationEnabled ? (
+                                {featuresReady &&
+                                    (registrationEnabled ? (
                                     <Button variant="outlined" onClick={() => nav("/register")}>
                                         Register
                                     </Button>
@@ -98,7 +100,7 @@ export default function LoginPage() {
                                             .
                                         </Typography>
                                     </Box>
-                                )}
+                                ))}
 
                             </Stack>
                         </Box>

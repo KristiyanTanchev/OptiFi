@@ -17,15 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(
-        name = "budgets",
-        indexes = {
-                @Index(name = "idx_budgets_user_id", columnList = "user_id"),
-                @Index(name = "idx_budgets_user_active_range", columnList = "user_id,start_date,end_date"),
-                @Index(name = "idx_budgets_accounts_account_id", columnList = "account_id"),
-                @Index(name = "idx_budgets_categories_category_id", columnList = "category_id")
-
-        })
+@Table(name = "budgets")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -68,8 +60,10 @@ public class Budget {
     @Builder.Default
     private Set<Category> categories = new HashSet<>();
 
+    @Column(name = "start_date")
     private LocalDate startDate;
 
+    @Column(name = "end_date")
     private LocalDate endDate;
 
     @Builder.Default

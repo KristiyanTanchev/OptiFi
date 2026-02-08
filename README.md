@@ -1,12 +1,10 @@
 ## Demo Deployment
 
-A live demo deployment is available for preview and evaluation purposes.
+A live demo deployment is available for preview and evaluation purposes.  
+> Note: Not all endpoints are implemented in the frontend.
 
-- **Frontend:** https://optifi.kvtmail.com
+- **Frontend:** https://optifi.kvtmail.com  
 - **Backend API:** https://api.optifi.kvtmail.com/api
-
-> The demo environment is intended for evaluation only.  
-> Data may be reset at any time and no uptime guarantees are provided.
 
 ---
 
@@ -18,7 +16,7 @@ It allows users to manage:
 - accounts
 - transactions
 - categories
-- authentication with JWT
+- budgets
 
 The project is split into a backend (Spring Boot) and a frontend (React + Vite).
 
@@ -31,15 +29,17 @@ The project is split into a backend (Spring Boot) and a frontend (React + Vite).
 - Spring Boot
 - Spring Security (JWT)
 - JPA / Hibernate
-- MariaDB, PostgreSQL
+- PostgreSQL
 
 ### Frontend
 - React
 - Vite
-- TypeScript
-- Material UI (MUI)
-- React Router
-- TanStack React Query
+
+---
+
+## Diagram of the backend architecture
+
+![Backend architecture diagram](docs/img/backend-architecture-diagram.png)
 
 ---
 
@@ -48,16 +48,22 @@ The project is split into a backend (Spring Boot) and a frontend (React + Vite).
 ### Prerequisites
 - **JDK 17+**
 - **Node.js 18+**
-- **MariaDB** (or compatible database)
+- **H2 (demo & test) / PostgreSQL (dev & prod)**
 
 > In development, the database schema is **auto-created** by the backend.  
-> No manual SQL setup is required.
+> No manual SQL setup is required.  
+> Demo/test use an **in-memory H2** database (data resets on restart).
+
+Optional: add google id to `application-dev.properties` to enable Google OAuth:
+```properties
+security.google.client-id=OPTIONAL_YOUR_GOOGLE_ID
+```
 
 ---
 
 ### Ports
-- Backend: http://localhost:8080
-- Frontend: http://localhost:5173
+- Backend: http://localhost:8080  
+- Frontend: http://localhost:5173  
 
 Running the backend and frontend requires **two terminals**.
 
@@ -65,22 +71,34 @@ Running the backend and frontend requires **two terminals**.
 
 ### Backend
 
-> Requires a running database and valid datasource configuration.
+> Demo configuration (H2) is set in `application-demo.properties`.
 
-Windows (PowerShell):
-```bash
-cd backend; .\gradlew.bat bootRun
+From repo root:
+
+```powershell
+# Windows (PowerShell)
+cd backend; $env:SPRING_PROFILES_ACTIVE="demo"; .\gradlew.bat bootRun
 ```
+
 ```bash
-# Linux / macOS:
-cd backend && ./gradlew bootRun
+# Linux / macOS
+cd backend && SPRING_PROFILES_ACTIVE=demo ./gradlew bootRun
 ```
+
+Alternative (works in any shell):
+
+```bash
+cd backend && ./gradlew bootRun -Dspring-boot.run.profiles=demo
+```
+
 The backend runs until stopped with Ctrl+C.
 
 ---
 
 ### Frontend
-From repo root (recommended, works everywhere):
+
+From repo root:
+
 ```bash
 npm --prefix frontend install
 npm --prefix frontend run dev
@@ -89,4 +107,5 @@ npm --prefix frontend run dev
 ---
 
 ## Status
-This project is under active development and currently represents an MVP.
+
+This project is under active development.

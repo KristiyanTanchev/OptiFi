@@ -9,6 +9,7 @@ export type TransactionSummary = {
     occurredAt: string;
     amount: string; // BigDecimal → string
     category: CategorySummary;
+    description?: string;
 };
 
 export type TransactionDetails = TransactionSummary & {

@@ -10,7 +10,7 @@ import {
     Typography,
 } from "@mui/material";
 import {Outlet, useNavigate} from "react-router-dom";
-import {clearSession, getUser} from "../auth/session";
+import {clearSession, getUser} from "@shared/auth/session.ts";
 
 const drawerWidth = 220;
 

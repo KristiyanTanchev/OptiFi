@@ -16,6 +16,21 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path aliases */
+    "baseUrl": "./src",
+    "paths": {
+      "@app/*": ["app/*"],
+      "@shared/*": ["shared/*"],
+      "@layout/*": ["layout/*"],
+      "@assets/*": ["assets/*"],
+      "@account/*": ["domain/account/*"],
+      "@auth/*": ["domain/auth/*"],
+      "@category/*": ["domain/category/*"],
+      "@meta/*": ["domain/meta/*"],
+      "@reporting/*": ["domain/reporting/*"],
+      "@transaction/*": ["domain/transaction/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

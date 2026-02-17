@@ -19,6 +19,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 
 @Service
 @Transactional
@@ -35,6 +37,15 @@ public class TransactionServiceImpl implements TransactionService {
         Specification<Transaction> spec = TransactionSpecs.fromQuery(query);
         Page<Transaction> page = transactionRepository.findAll(spec, pageable);
         return page.map(TransactionSummaryResult::fromEntity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal getTransactionsSum(TransactionQuery query) {
+        Specification<Transaction> spec = TransactionSpecs.fromQuery(query);
+        return transactionRepository.findAll(spec).stream()
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override

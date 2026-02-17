@@ -93,15 +93,15 @@ public class TransactionServiceTests {
 
     @Test
     void getAllUserTransactions_Should_returnMappedPage() {
-        TransactionQuery query = new TransactionQuery(
-                99L,
-                10L,
-                Instant.parse("2026-01-01T00:00:00Z"),
-                Instant.parse("2026-02-01T00:00:00Z"),
-                new BigDecimal("1.00"),
-                new BigDecimal("100.00"),
-                "lunch"
-        );
+        TransactionQuery query = TransactionQuery.builder()
+                .userId(99L)
+                .accountId(10L)
+                .from(Instant.parse("2026-01-01T00:00:00Z"))
+                .to(Instant.parse("2026-02-01T00:00:00Z"))
+                .min(new BigDecimal("1.00"))
+                .max(new BigDecimal("100.00"))
+                .description("lunch")
+                .build();
 
         Pageable pageable = PageRequest.of(0, 10, Sort.by("occurredAt").descending());
         Page<Transaction> page = new PageImpl<>(List.of(tx1), pageable, 1);

@@ -1,9 +1,11 @@
 package com.optifi.domain.budget.application;
 
 import com.optifi.domain.budget.application.command.BudgetCreateCommand;
+import com.optifi.domain.budget.application.command.BudgetEvaluationCommand;
 import com.optifi.domain.budget.application.command.BudgetQuery;
 import com.optifi.domain.budget.application.command.BudgetUpdateCommand;
 import com.optifi.domain.budget.application.result.BudgetDetailsResult;
+import com.optifi.domain.budget.application.result.BudgetEvaluationResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -21,4 +23,6 @@ public interface BudgetService {
     void unarchiveBudget(long budgetId, long userId);
 
     void deleteBudget(long budgetId, long userId);
+
+    BudgetEvaluationResult evaluateBudget(BudgetEvaluationCommand cmd);
 }

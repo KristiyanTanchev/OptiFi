@@ -2,15 +2,19 @@ package com.optifi.domain.budget.api;
 
 import com.optifi.config.web.CurrentUser;
 import com.optifi.domain.budget.api.mapper.BudgetMapper;
+import com.optifi.domain.budget.api.request.BudgetEvaluationRequestDto;
 import com.optifi.domain.budget.api.request.BudgetSearchRequestDto;
 import com.optifi.domain.budget.api.request.BudgetCreateRequestDto;
 import com.optifi.domain.budget.api.request.BudgetUpdateRequestDto;
 import com.optifi.domain.budget.api.response.BudgetDetailsResponseDto;
+import com.optifi.domain.budget.api.response.BudgetEvaluationResponseDto;
 import com.optifi.domain.budget.application.BudgetService;
 import com.optifi.domain.budget.application.command.BudgetCreateCommand;
+import com.optifi.domain.budget.application.command.BudgetEvaluationCommand;
 import com.optifi.domain.budget.application.command.BudgetQuery;
 import com.optifi.domain.budget.application.command.BudgetUpdateCommand;
 import com.optifi.domain.budget.application.result.BudgetDetailsResult;
+import com.optifi.domain.budget.application.result.BudgetEvaluationResult;
 import com.optifi.domain.shared.UserContext;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -102,5 +106,16 @@ public class BudgetRestController {
     ) {
         budgetService.deleteBudget(id, ctx.userId());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/evaluate")
+    public ResponseEntity<BudgetEvaluationResponseDto> getBudgetsEvaluation(
+            @Valid @ModelAttribute BudgetEvaluationRequestDto dto,
+            @CurrentUser UserContext ctx
+    ) {
+        BudgetEvaluationCommand cmd = mapper.toEvaluationCommand(dto, ctx);
+        BudgetEvaluationResult result = budgetService.evaluateBudget(cmd);
+        BudgetEvaluationResponseDto response = mapper.toEvaluationDto(result);
+        return ResponseEntity.ok(response);
     }
 }

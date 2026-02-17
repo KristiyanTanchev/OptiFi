@@ -5,6 +5,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 public class TransactionSpecs {
 
@@ -16,7 +17,9 @@ public class TransactionSpecs {
                 dateTo(query.to()),
                 minAmount(query.min()),
                 maxAmount(query.max()),
-                descriptionContains(query.description())
+                descriptionContains(query.description()),
+                accountsFilter(query.accountIds()),
+                categoriesFilter(query.categoryIds())
         );
     }
 
@@ -58,5 +61,17 @@ public class TransactionSpecs {
         return (root, query, cb) ->
                 description == null || description.isBlank() ? cb.conjunction() :
                         cb.like(cb.lower(root.get("description")), "%" + description.toLowerCase() + "%");
+    }
+
+    private static Specification<Transaction> accountsFilter(List<Long> accountIds) {
+        return (root, query, cb) ->
+                accountIds == null || accountIds.isEmpty() ? cb.conjunction() :
+                        cb.in(root.get("account").get("id")).value(accountIds);
+    }
+
+    private static Specification<Transaction> categoriesFilter(List<Long> categoryIds) {
+        return (root, query, cb) ->
+                categoryIds == null || categoryIds.isEmpty() ? cb.conjunction() :
+                        cb.in(root.get("category").get("id")).value(categoryIds);
     }
 }

@@ -2,16 +2,18 @@ package com.optifi.domain.budget.application;
 
 import com.optifi.domain.account.model.Account;
 import com.optifi.domain.account.repository.AccountRepository;
-import com.optifi.domain.budget.application.command.BudgetCreateCommand;
-import com.optifi.domain.budget.application.command.BudgetQuery;
-import com.optifi.domain.budget.application.command.BudgetSpecs;
-import com.optifi.domain.budget.application.command.BudgetUpdateCommand;
+import com.optifi.domain.budget.application.command.*;
 import com.optifi.domain.budget.application.result.BudgetDetailsResult;
+import com.optifi.domain.budget.application.result.BudgetEvaluationPerItemResult;
+import com.optifi.domain.budget.application.result.BudgetEvaluationResult;
 import com.optifi.domain.budget.model.Budget;
 import com.optifi.domain.budget.repository.BudgetRepository;
 import com.optifi.domain.category.model.Category;
 import com.optifi.domain.category.repository.CategoryRepository;
 import com.optifi.domain.shared.BudgetPeriod;
+import com.optifi.domain.shared.TimeHelper;
+import com.optifi.domain.transaction.application.TransactionService;
+import com.optifi.domain.transaction.application.command.TransactionQuery;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
 import com.optifi.exceptions.*;
@@ -22,9 +24,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -38,6 +42,8 @@ public class BudgetServiceImpl implements BudgetService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final CategoryRepository categoryRepository;
+    private final TransactionService transactionService;
+    private final TimeHelper timeHelper;
 
     @Override
     @Transactional(readOnly = true)
@@ -126,6 +132,46 @@ public class BudgetServiceImpl implements BudgetService {
                 .orElseThrow(() -> new EntityNotFoundException("Budget", budgetId));
         budgetRepository.delete(budget);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BudgetEvaluationResult evaluateBudget(BudgetEvaluationCommand cmd) {
+        if (cmd.from().isAfter(cmd.to())) {
+            throw new InvalidDateException("from must be <= to");
+        }
+
+        List<Budget> budgets = budgetRepository.findActiveOverlapping(
+                cmd.userId(),
+                cmd.from(),
+                cmd.to()
+        );
+        BudgetEvaluationResult result = BudgetEvaluationResult.builder()
+                .from(cmd.from())
+                .to(cmd.to())
+                .items(new ArrayList<>())
+                .build();
+
+        for (Budget budget : budgets) {
+            List<Long> accountIds = budget.getAccounts().isEmpty() ? null
+                    : budget.getAccounts().stream().map(Account::getId).toList();
+
+            List<Long> categoryIds = budget.getCategories().isEmpty() ? null
+                    : budget.getCategories().stream().map(Category::getId).toList();
+
+            TransactionQuery query = TransactionQuery.builder()
+                    .userId(cmd.userId())
+                    .from(timeHelper.startOfDay(cmd.from(), cmd.zoneId()))
+                    .to(timeHelper.startOfNextDay(cmd.to(), cmd.zoneId()))
+                    .accountIds(accountIds)
+                    .categoryIds(categoryIds)
+                    .build();
+
+            BigDecimal spent = transactionService.getTransactionsSum(query);
+            result.items().add(BudgetEvaluationPerItemResult.fromEntity(budget, spent));
+        }
+        return result;
+    }
+
 
     private void validateBudgetNameUniqueness(String name, long userId) {
         if (budgetRepository.existsByUser_IdAndName(userId, name)) {

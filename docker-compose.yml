@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: optifi-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: optifi
+      POSTGRES_USER: optifi
+      POSTGRES_PASSWORD: optifi
+    ports:
+      - "5432:5432"
+    volumes:
+      - optifi-postgres-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: optifi-backend
+    depends_on:
+      - db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/optifi
+      SPRING_DATASOURCE_USERNAME: optifi
+      SPRING_DATASOURCE_PASSWORD: optifi
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: optifi-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+
+volumes:
+  optifi-postgres-data:

@@ -1,5 +1,8 @@
 package com.optifi.domain.transaction.api;
 
+import com.optifi.config.openApi.ApiForbidden;
+import com.optifi.config.openApi.ApiNotFound;
+import com.optifi.config.openApi.ApiValidationError;
 import com.optifi.config.web.CurrentUser;
 import com.optifi.domain.shared.UserContext;
 import com.optifi.domain.transaction.api.mapper.TransactionMapper;
@@ -15,6 +18,9 @@ import com.optifi.domain.transaction.application.command.*;
 import com.optifi.domain.transaction.application.result.TransactionDetailsResult;
 import com.optifi.domain.transaction.application.result.TransactionGetSummaryResult;
 import com.optifi.domain.transaction.application.result.TransactionSummaryResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -29,6 +35,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
+@Tag(name = "Transactions")
+@ApiForbidden
+@ApiNotFound
+@ApiValidationError
 
 @RestController
 @RequestMapping("/api/accounts/{accountId}/transactions")
@@ -39,6 +49,8 @@ public class TransactionRestController {
     private final TransactionService transactionService;
     private final TransactionMapper mapper;
 
+    @Operation(summary = "List my transactions")
+    @ApiResponse(responseCode = "200", description = "Transactions returned")
     @GetMapping
     public ResponseEntity<Page<TransactionSummaryResponseDto>> getAllTransactions(
             @PathVariable @NotNull @Positive Long accountId,
@@ -53,6 +65,9 @@ public class TransactionRestController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Get transaction by id")
+    @ApiResponse(responseCode = "200", description = "Transaction returned")
+    @ApiValidationError(description = "Only positive id accepted")
     @GetMapping("/{transactionId}")
     public ResponseEntity<TransactionDetailsResponseDto> getTransaction(
             @PathVariable @NotNull @Positive Long accountId,
@@ -65,6 +80,8 @@ public class TransactionRestController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @Operation(summary = "Create transaction")
+    @ApiResponse(responseCode = "201", description = "Transaction created")
     @PostMapping
     public ResponseEntity<TransactionDetailsResponseDto> createTransaction(
             @PathVariable @NotNull @Positive Long accountId,
@@ -79,6 +96,8 @@ public class TransactionRestController {
                 .body(responseDto);
     }
 
+    @Operation(summary = "Update transaction")
+    @ApiResponse(responseCode = "204", description = "Transaction updated")
     @PutMapping("/{transactionId}")
     public ResponseEntity<Void> updateTransaction(
             @PathVariable @NotNull @Positive Long accountId,
@@ -91,6 +110,9 @@ public class TransactionRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Delete transaction")
+    @ApiResponse(responseCode = "204", description = "Transaction deleted")
+    @ApiValidationError(description = "Only positive id accepted")
     @DeleteMapping("/{transactionId}")
     public ResponseEntity<Void> deleteTransaction(
             @PathVariable @NotNull @Positive Long accountId,
@@ -102,6 +124,8 @@ public class TransactionRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Get transactions summary")
+    @ApiResponse(responseCode = "200", description = "Transactions summary returned")
     @GetMapping("/summary")
     public ResponseEntity<TransactionGetSummaryResponseDto> getTransactionsSummary(
             @PathVariable @NotNull @Positive Long accountId,

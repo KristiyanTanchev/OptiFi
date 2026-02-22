@@ -199,7 +199,7 @@ This project is under active development.
 Planned improvements:
 - Increase unit test coverage
 - Add integration tests
-- Expand OpenAPI (Swagger) coverage to fully document all REST endpoints and response models
+- Expand OpenAPI (Swagger) coverage to have better dto examples
 - Introduce database migrations (Flyway)
 - Achieve full frontend coverage of backend endpoints
 - Admin-specific features

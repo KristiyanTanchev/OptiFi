@@ -1,5 +1,9 @@
 package com.optifi.domain.category.api;
 
+import com.optifi.config.openApi.ApiConflict;
+import com.optifi.config.openApi.ApiForbidden;
+import com.optifi.config.openApi.ApiNotFound;
+import com.optifi.config.openApi.ApiValidationError;
 import com.optifi.config.web.CurrentUser;
 import com.optifi.domain.category.api.mapper.CategoryMapper;
 import com.optifi.domain.category.api.request.CategoryCreateRequestDto;
@@ -12,6 +16,9 @@ import com.optifi.domain.category.application.command.CategoryUpdateCommand;
 import com.optifi.domain.category.application.result.CategoryDetailsResult;
 import com.optifi.domain.category.application.result.CategorySummaryResult;
 import com.optifi.domain.shared.UserContext;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -23,6 +30,9 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
+@Tag(name = "Categories")
+@ApiForbidden
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/categories")
@@ -32,8 +42,9 @@ public class CategoryRestController {
     private final CategoryService categoryService;
     private final CategoryMapper mapper;
 
+    @Operation(summary = "List my categories")
+    @ApiResponse(responseCode = "200", description = "Categories returned")
     @GetMapping
-
     public ResponseEntity<List<CategorySummaryResponseDto>> getUserOwnCategories(
             @CurrentUser UserContext ctx
     ) {
@@ -42,6 +53,10 @@ public class CategoryRestController {
         return ResponseEntity.ok(dto);
     }
 
+    @Operation(summary = "Create category")
+    @ApiResponse(responseCode = "201", description = "Category created")
+    @ApiValidationError
+    @ApiConflict(description = "Category with same name already exists")
     @PostMapping
     public ResponseEntity<CategoryDetailsResponseDto> createCategory(
             @Valid @RequestBody CategoryCreateRequestDto dto,
@@ -56,6 +71,10 @@ public class CategoryRestController {
 
     }
 
+    @Operation(summary = "Get category by id")
+    @ApiResponse(responseCode = "200", description = "Category returned")
+    @ApiValidationError
+    @ApiNotFound(description = "Category not found")
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDetailsResponseDto> getCategoryById(
             @PathVariable @NotNull @Positive Long id,
@@ -66,6 +85,10 @@ public class CategoryRestController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Update category")
+    @ApiResponse(responseCode = "204", description = "Category updated")
+    @ApiValidationError
+    @ApiNotFound(description = "Category not found")
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateCategory(
             @PathVariable @NotNull @Positive Long id,
@@ -77,6 +100,10 @@ public class CategoryRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Delete category")
+    @ApiResponse(responseCode = "204", description = "Category deleted")
+    @ApiValidationError
+    @ApiNotFound(description = "Category not found")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(
             @PathVariable @NotNull @Positive Long id,

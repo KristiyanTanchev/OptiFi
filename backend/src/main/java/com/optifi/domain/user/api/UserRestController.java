@@ -1,5 +1,6 @@
 package com.optifi.domain.user.api;
 
+import com.optifi.config.openApi.*;
 import com.optifi.config.web.CurrentUser;
 import com.optifi.domain.shared.UserContext;
 import com.optifi.domain.user.api.mapper.UserMapper;
@@ -12,6 +13,9 @@ import com.optifi.domain.user.api.request.ChangePasswordRequestDto;
 import com.optifi.domain.user.api.response.UserDetailsResponseDto;
 import com.optifi.domain.user.api.request.UserPreferencesUpdateRequestDto;
 import com.optifi.domain.user.api.response.UserSummaryResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -22,14 +26,20 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Users")
+@ApiForbidden
+
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class UserRestController {
 
     private final UserService userService;
     private final UserMapper mapper;
 
+    @Operation(summary = "List all users")
+    @ApiResponse(responseCode = "200", description = "Users returned")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<List<UserSummaryResponseDto>> getUsers() {
@@ -38,6 +48,10 @@ public class UserRestController {
         return ResponseEntity.ok(userDtos);
     }
 
+    @Operation(summary = "Get user by id")
+    @ApiResponse(responseCode = "200", description = "User returned")
+    @ApiValidationError(description = "Only positive id accepted")
+    @ApiNotFound(description = "User not found")
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<UserDetailsResponseDto> getUser(
@@ -47,6 +61,11 @@ public class UserRestController {
         return ResponseEntity.ok(userDetailsResponseDto);
     }
 
+    @Operation(summary = "Change user role")
+    @ApiResponse(responseCode = "204", description = "Role changed")
+    @ApiValidationError(description = "Only positive id accepted")
+    @ApiNotFound(description = "User not found")
+    @ApiConflict
     @PutMapping("/{id}/promote-admin")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> promoteToAdmin(
@@ -58,6 +77,11 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Change user role")
+    @ApiResponse(responseCode = "204", description = "Role changed")
+    @ApiValidationError(description = "Only positive id accepted")
+    @ApiNotFound(description = "User not found")
+    @ApiConflict
     @PutMapping("/{id}/promote-moderator")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> promoteToModerator(
@@ -69,6 +93,11 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Change user role")
+    @ApiResponse(responseCode = "204", description = "Role changed")
+    @ApiValidationError(description = "Only positive id accepted")
+    @ApiNotFound(description = "User not found")
+    @ApiConflict
     @PutMapping("/{id}/demote")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> demoteToUser(
@@ -80,6 +109,11 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Ban user")
+    @ApiResponse(responseCode = "204", description = "User banned")
+    @ApiValidationError(description = "Only positive id accepted")
+    @ApiNotFound(description = "User not found")
+    @ApiConflict
     @PutMapping("/{id}/ban")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Void> banUser(
@@ -91,6 +125,11 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Unban user")
+    @ApiResponse(responseCode = "204", description = "User unbanned")
+    @ApiValidationError(description = "Only positive id accepted")
+    @ApiNotFound(description = "User not found")
+    @ApiConflict
     @PutMapping("/{id}/unban")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Void> unbanUser(
@@ -102,6 +141,10 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Delete user")
+    @ApiResponse(responseCode = "204", description = "User deleted")
+    @ApiValidationError(description = "Only positive id accepted")
+    @ApiNotFound(description = "User not found")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<Void> deleteUser(
@@ -112,8 +155,9 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Get own user")
+    @ApiResponse(responseCode = "200", description = "User returned")
     @GetMapping("/me")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserDetailsResponseDto> getOwnUser(
             @CurrentUser UserContext ctx
     ) {
@@ -122,8 +166,10 @@ public class UserRestController {
         return ResponseEntity.ok(userDetailsResponseDto);
     }
 
+    @Operation(summary = "Change own password")
+    @ApiResponse(responseCode = "204", description = "Password changed")
+    @ApiValidationError
     @PutMapping("/me/password")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> changePassword(
             @Valid @RequestBody ChangePasswordRequestDto dto,
             @CurrentUser UserContext ctx
@@ -133,8 +179,11 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Change own email")
+    @ApiResponse(responseCode = "204", description = "Email changed")
+    @ApiValidationError
+    @ApiConflict(description = "Email already exists")
     @PutMapping("/me/email")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> changeEmail(
             @Valid @RequestBody ChangeEmailRequestDto changeEmailRequestDto,
             @CurrentUser UserContext ctx) {
@@ -143,8 +192,10 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Change own preferences")
+    @ApiResponse(responseCode = "204", description = "Preferences changed")
+    @ApiValidationError
     @PutMapping("/me/preferences")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> changePreferences(
             @Valid @RequestBody UserPreferencesUpdateRequestDto dto,
             @CurrentUser UserContext ctx) {
@@ -153,11 +204,15 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Delete own account")
+    @ApiResponse(responseCode = "204", description = "Account deleted")
+    @ApiValidationError
+    @ApiConflict(description = "Cannot delete last admin")
     @DeleteMapping("/me")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteUser(
+    public ResponseEntity<Void> deleteSelf(
             @CurrentUser UserContext ctx) {
         userService.deleteUser(ctx.userId(), ctx.userId());
         return ResponseEntity.noContent().build();
     }
 }
+

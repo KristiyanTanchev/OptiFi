@@ -24,9 +24,8 @@ public class OpenApiConfig {
                         .version("1.0")
                         .description("OptiFi REST API with JWT authentication"))
                 .servers(List.of(
-                        new Server()
-                                .url("/")
-                                .description("Local / Default")
+                        new Server().url("https://api.optifi.kvtmail.com").description("Live demo"),
+                        new Server().url("http://localhost:8080").description("Local")
                 ))
                 .tags(List.of(
                         new Tag().name("Auth").description("Authentication"),

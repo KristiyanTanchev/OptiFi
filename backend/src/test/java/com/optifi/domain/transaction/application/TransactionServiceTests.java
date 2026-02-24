@@ -504,4 +504,52 @@ public class TransactionServiceTests {
                 isNull()
         );
     }
+
+    @Test
+    void getTransactionSummary_Should_passNullQuery_When_null() {
+        TransactionGetSummaryCommand cmd = new TransactionGetSummaryCommand(
+                99L,
+                10L,
+                Instant.parse("2026-01-01T00:00:00Z"),
+                Instant.parse("2026-01-31T23:59:59Z"),
+                null,
+                null
+        );
+
+        when(accountRepository.findById(10L)).thenReturn(Optional.of(account1));
+
+        TransactionSummaryProjection projection = mock(TransactionSummaryProjection.class);
+        when(projection.getIncome()).thenReturn(new BigDecimal("0.00"));
+        when(projection.getExpense()).thenReturn(new BigDecimal("0.00"));
+        when(projection.getCount()).thenReturn(0L);
+
+        when(transactionRepository.getAccountTransactionSummary(
+                eq(99L),
+                eq(10L),
+                eq(cmd.from()),
+                eq(cmd.to()),
+                isNull(),
+                isNull()
+        )).thenReturn(projection);
+
+        TransactionGetSummaryResult result = transactionService.getTransactionSummary(cmd);
+
+        assertNotNull(result);
+
+        verify(transactionRepository).getAccountTransactionSummary(
+                eq(99L),
+                eq(10L),
+                eq(cmd.from()),
+                eq(cmd.to()),
+                isNull(),
+                isNull()
+        );
+    }
+
+    @Test
+    void getTransactionSum_Should_returnSum_When_valid() {
+        TransactionQuery query = TransactionQuery.builder().build();
+        transactionService.getTransactionsSum(query);
+        verify(transactionRepository).findAll(any(Specification.class));
+    }
 }

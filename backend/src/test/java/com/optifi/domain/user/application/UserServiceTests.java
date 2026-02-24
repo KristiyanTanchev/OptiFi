@@ -351,6 +351,22 @@ public class UserServiceTests {
     }
 
     @Test
+    void setPreferences_Should_throw_When_invalidZoneId() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user1));
+        assertThrows(InvalidTimeZoneException.class,
+                () -> userService.setPreferences(
+                        new SetUserPreferenceCommand(
+                                1L,
+                                Currency.USD,
+                                SupportedLocale.BG_BG,
+                                "Invalid"
+                        )
+                ));
+        verify(userRepository, never()).save(any());
+        verify(appDefaults, never()).userTimezone();
+    }
+
+    @Test
     void changeUserRole_Should_throwException_When_currentUserDoesNotExist() {
         RoleChangeAction action = RoleChangeAction.PROMOTE_TO_ADMIN;
         ChangeUserRoleCommand cmd = new ChangeUserRoleCommand(1L, 2L, action);
@@ -597,5 +613,13 @@ public class UserServiceTests {
         user2.setRole(Role.BLOCKED);
         userService.unbanUser(new UnbanUserCommand(1L, 2L));
         assertEquals(Role.USER, user2.getRole());
+    }
+
+    @Test
+    void createGoogleUser_Should_succeed_When_valid() {
+        String email = "mail@example.com";
+        String sub = "sub";
+        userService.createGoogleUser(email, sub);
+        verify(userRepository).save(any());
     }
 }

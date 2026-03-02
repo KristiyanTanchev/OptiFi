@@ -13,6 +13,9 @@ import com.optifi.domain.category.model.Category;
 import com.optifi.domain.category.repository.CategoryRepository;
 import com.optifi.domain.shared.BudgetPeriod;
 import com.optifi.domain.shared.Currency;
+import com.optifi.domain.shared.TimeHelper;
+import com.optifi.domain.transaction.application.TransactionService;
+import com.optifi.domain.transaction.application.command.TransactionQuery;
 import com.optifi.domain.user.model.User;
 import com.optifi.domain.user.repository.UserRepository;
 import com.optifi.exceptions.DuplicateEntityException;
@@ -51,8 +54,13 @@ public class BudgetServiceTests {
     private AccountRepository accountRepository;
     @Mock
     private CategoryRepository categoryRepository;
+    @Mock
+    private TimeHelper timeHelper;
+    @Mock
+    private TransactionService transactionService;
     @InjectMocks
     private BudgetServiceImpl budgetService;
+
 
     private User user;
     private Budget budget11;
@@ -577,6 +585,16 @@ public class BudgetServiceTests {
         when(budgetRepository.findActiveOverlapping(
                 cmd.userId(), cmd.from(), cmd.to()
         )).thenReturn(List.of(budget11, budget22));
+        when(timeHelper.startOfDay(validStartDate, null)).thenReturn(null);
+        when(timeHelper.startOfNextDay(validEndDate, null)).thenReturn(null);
+        when(transactionService.getTransactionsSum(TransactionQuery.builder()
+                .userId(cmd.userId())
+                .from(timeHelper.startOfDay(cmd.from(), cmd.zoneId()))
+                .to(timeHelper.startOfNextDay(cmd.to(), cmd.zoneId()))
+                .accountIds(null)
+                .categoryIds(null)
+                .build()))
+                .thenReturn(BigDecimal.TEN);
         assertDoesNotThrow(() -> budgetService.evaluateBudget(cmd));
     }
 }

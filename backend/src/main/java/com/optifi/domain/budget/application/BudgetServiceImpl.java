@@ -63,11 +63,11 @@ public class BudgetServiceImpl implements BudgetService {
 
     @Override
     public BudgetDetailsResult createBudget(BudgetCreateCommand cmd) {
+        validateCorrectDates(cmd.startDate(), cmd.endDate(), cmd.budgetPeriod());
         User user = userRepository.findById(cmd.userId())
                 .orElseThrow(() -> new EntityNotFoundException("User", cmd.userId()));
 
         validateBudgetNameUniqueness(cmd.name(), cmd.userId());
-        validateCorrectDates(cmd.startDate(), cmd.endDate(), cmd.budgetPeriod());
 
         List<Account> accounts = resolveAccounts(cmd.accountIds(), cmd.userId());
 

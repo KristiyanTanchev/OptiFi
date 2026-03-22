@@ -78,7 +78,7 @@ docs/        Project documentation (diagrams + notes)
 
 ## CI / Automation
 
-GitHub Actions pipeline performs automated build and unit test verification on every push and pull request.
+GitHub Actions pipeline performs automated build, unit and integration test verification on every push and pull request.
 
 ---
 
@@ -197,8 +197,7 @@ Migration tooling (e.g. Flyway) is planned.
 This project is under active development.
 
 Planned improvements:
-- Increase unit test coverage
-- Add integration tests
+- Increase integration tests coverage
 - Expand OpenAPI (Swagger) coverage to have better dto examples
 - Introduce database migrations (Flyway)
 - Achieve full frontend coverage of backend endpoints
